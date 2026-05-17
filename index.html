@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Аналитика филиалов таксопарка</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --accent: #f59e0b;
+      --accent-dark: #d97706;
+    }
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+    .kpi-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .badge-up   { background: #064e3b; color: #34d399; }
+    .badge-down { background: #4c0519; color: #f87171; }
+    .tab { cursor: pointer; padding: 6px 16px; border-radius: 8px; font-size: 0.875rem; transition: background 0.15s; }
+    .tab.active { background: var(--accent); color: #000; font-weight: 600; }
+    .tab:not(.active):hover { background: #334155; }
+    select, input[type=date] {
+      background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
+      border-radius: 8px; padding: 6px 12px; font-size: 0.875rem; outline: none;
+    }
+    select:focus, input[type=date]:focus { border-color: var(--accent); }
+    .trend-spark { display: inline-block; width: 60px; height: 28px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #0f172a; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; text-align: left; }
+    tbody tr { border-top: 1px solid #334155; transition: background 0.1s; }
+    tbody tr:hover { background: #334155; }
+    td { padding: 12px 14px; font-size: 0.875rem; }
+    .progress-bar { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    .chart-wrap { position: relative; }
+    @media (max-width: 768px) { .hide-mobile { display: none; } }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 border-b border-slate-700" style="background:#0f172acc;backdrop-filter:blur(12px)">
+  <div class="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-2 mr-auto">
+      <span class="text-2xl">🚕</span>
+      <div>
+        <div class="font-bold text-white text-base leading-tight">TaxiFleet Analytics</div>
+        <div class="text-slate-400 text-xs">Аналитика филиалов</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-slate-400 text-sm hide-mobile">Период:</span>
+      <input type="date" id="dateFrom" value="2024-01-01" />
+      <span class="text-slate-400">—</span>
+      <input type="date" id="dateTo" value="2024-06-30" />
+    </div>
+
+    <select id="branchFilter">
+      <option value="all">Все филиалы</option>
+      <option value="msk">Москва</option>
+      <option value="spb">Санкт-Петербург</option>
+      <option value="ekb">Екатеринбург</option>
+      <option value="nsk">Новосибирск</option>
+      <option value="kzn">Казань</option>
+    </select>
+
+    <button onclick="refreshData()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style="background:var(--accent);color:#000">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Обновить
+    </button>
+  </div>
+</header>
+
+<main class="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
+
+  <!-- KPI CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpiRow"></div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Revenue bar chart -->
+    <div class="card p-4 lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-semibold text-white">Выручка по филиалам</div>
+          <div class="text-slate-400 text-xs mt-0.5">тыс. ₽ · по месяцам</div>
+        </div>
+        <div class="flex gap-1" id="revenueTabs">
+          <div class="tab active" data-chart="revenue" data-mode="monthly" onclick="setRevenueMode('monthly',this)">Месяц</div>
+          <div class="tab" data-chart="revenue" data-mode="quarterly" onclick="setRevenueMode('quarterly',this)">Квартал</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="revenueChart"></canvas></div>
+    </div>
+
+    <!-- Driver status doughnut -->
+    <div class="card p-4">
+      <div class="font-semibold text-white mb-1">Статус водителей</div>
+      <div class="text-slate-400 text-xs mb-4">На данный момент</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="driverStatusChart"></canvas></div>
+      <div class="mt-4 space-y-2" id="driverLegend"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Trips line -->
+    <div class="card p-4 lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-semibold text-white">Количество поездок</div>
+          <div class="text-slate-400 text-xs mt-0.5">Динамика по неделям</div>
+        </div>
+        <div class="flex gap-1" id="tripBranchTabs"></div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="tripsChart"></canvas></div>
+    </div>
+
+    <!-- Rating radar -->
+    <div class="card p-4">
+      <div class="font-semibold text-white mb-1">Рейтинг филиалов</div>
+      <div class="text-slate-400 text-xs mb-4">По ключевым метрикам</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- BRANCH TABLE -->
+  <div class="card overflow-hidden">
+    <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-white">Сводная таблица филиалов</div>
+        <div class="text-slate-400 text-xs mt-0.5">За выбранный период</div>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" id="tableSearch" placeholder="Поиск филиала…"
+          class="text-sm"
+          style="background:#0f172a;border:1px solid #475569;color:#e2e8f0;border-radius:8px;padding:6px 12px;outline:none;width:180px"
+          oninput="filterTable(this.value)" />
+        <button onclick="exportCSV()" class="px-3 py-1.5 rounded-lg text-xs border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors">
+          ↓ CSV
+        </button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table id="branchTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')" class="cursor-pointer hover:text-white">Филиал ↕</th>
+            <th onclick="sortTable('revenue')" class="cursor-pointer hover:text-white hide-mobile">Выручка ↕</th>
+            <th onclick="sortTable('trips')" class="cursor-pointer hover:text-white">Поездки ↕</th>
+            <th onclick="sortTable('drivers')" class="cursor-pointer hover:text-white hide-mobile">Водителей</th>
+            <th onclick="sortTable('utilization')" class="cursor-pointer hover:text-white hide-mobile">Загрузка</th>
+            <th onclick="sortTable('rating')" class="cursor-pointer hover:text-white">Рейтинг</th>
+            <th onclick="sortTable('avgTrip')" class="cursor-pointer hover:text-white hide-mobile">Ср. чек</th>
+            <th>Тренд</th>
+          </tr>
+        </thead>
+        <tbody id="branchTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Top drivers -->
+    <div class="card p-4">
+      <div class="font-semibold text-white mb-4">Топ-10 водителей</div>
+      <div class="space-y-2.5" id="topDriversList"></div>
+    </div>
+
+    <!-- Incidents / alerts -->
+    <div class="card p-4">
+      <div class="font-semibold text-white mb-4">Активные уведомления</div>
+      <div class="space-y-2" id="alertsList"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-center text-slate-600 text-xs py-6">
+  TaxiFleet Analytics · Данные обновлены: <span id="lastUpdate"></span>
+</footer>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const BRANCHES = [
+  { id:'msk', name:'Москва',           flag:'🏙️' },
+  { id:'spb', name:'Санкт-Петербург',  flag:'🌉' },
+  { id:'ekb', name:'Екатеринбург',     flag:'🏔️' },
+  { id:'nsk', name:'Новосибирск',      flag:'❄️' },
+  { id:'kzn', name:'Казань',           flag:'🕌' },
+];
+
+const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн'];
+const QUARTERS = ['Q1 2024','Q2 2024'];
+
+const BASE_REVENUE = { msk:18400, spb:11200, ekb:7800, nsk:6900, kzn:5400 };
+const BASE_TRIPS   = { msk:42000, spb:26000, ekb:18000, nsk:15500, kzn:12000 };
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+function genMonthly(base, months=6, growthRate=0.04) {
+  return Array.from({length: months}, (_, i) => Math.round(base * Math.pow(1 + growthRate, i) * (0.9 + Math.random() * 0.2)));
+}
+
+const revenueMonthly = {};
+const tripsWeekly    = {};
+BRANCHES.forEach(b => {
+  revenueMonthly[b.id] = genMonthly(BASE_REVENUE[b.id] / 6);
+  tripsWeekly[b.id]    = Array.from({length:24}, (_, i) =>
+    Math.round(BASE_TRIPS[b.id] / 24 * (0.85 + Math.random() * 0.3)));
+});
+
+const revenueQuarterly = {};
+BRANCHES.forEach(b => {
+  revenueQuarterly[b.id] = [
+    revenueMonthly[b.id].slice(0,3).reduce((a,c)=>a+c,0),
+    revenueMonthly[b.id].slice(3,6).reduce((a,c)=>a+c,0),
+  ];
+});
+
+const branchStats = BRANCHES.map(b => {
+  const rev = revenueMonthly[b.id].reduce((a,c)=>a+c,0);
+  const trips = tripsWeekly[b.id].reduce((a,c)=>a+c,0);
+  const drivers = rand(120, 900);
+  const utilization = rand(62, 94);
+  const rating = (3.8 + Math.random() * 1.2).toFixed(1);
+  const avgTrip = Math.round(rev * 1000 / trips);
+  const trend = Array.from({length:6}, () => rand(-5, 15));
+  return { ...b, rev, trips, drivers, utilization, rating: parseFloat(rating), avgTrip, trend };
+});
+
+const driverStatus = { active: 1840, onBreak: 420, offline: 390 };
+
+const topDrivers = Array.from({length:10}, (_, i) => ({
+  name: ['Алексей Иванов','Дмитрий Смирнов','Сергей Попов','Андрей Козлов','Михаил Новиков',
+         'Павел Морозов','Иван Волков','Николай Соколов','Артём Лебедев','Владимир Зайцев'][i],
+  branch: BRANCHES[i % BRANCHES.length].name,
+  trips: rand(280, 450),
+  rating: (4.5 + Math.random() * 0.5).toFixed(2),
+  revenue: rand(180, 420),
+}));
+
+const alerts = [
+  { type:'warn', icon:'⚠️', text:'Загрузка автопарка Екатеринбург ниже нормы (58%)', time:'10 мин назад' },
+  { type:'err',  icon:'🔴', text:'3 жалобы на водителя #4821 — Казань', time:'25 мин назад' },
+  { type:'info', icon:'🔵', text:'Плановое ТО: 14 автомобилей — Москва', time:'1 час назад' },
+  { type:'ok',   icon:'🟢', text:'Рекорд выручки — Санкт-Петербург (ср. вт.)', time:'2 часа назад' },
+  { type:'warn', icon:'⚠️', text:'Пиковая нагрузка ожидается в 18:00 — Новосибирск', time:'3 часа назад' },
+  { type:'info', icon:'🔵', text:'Новый водитель #5102 прошёл верификацию', time:'5 часов назад' },
+];
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+
+const COLORS = {
+  msk: '#f59e0b', spb: '#38bdf8', ekb: '#a78bfa', nsk: '#34d399', kzn: '#fb7185'
+};
+const COLOR_LIST = Object.values(COLORS);
+
+let charts = {};
+let revenueMode = 'monthly';
+let activeTrip = 'msk';
+let sortKey = 'revenue', sortDir = -1;
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function buildRevenueChart() {
+  destroyChart('revenue');
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const labels = revenueMode === 'monthly' ? MONTHS : QUARTERS;
+  const datasets = BRANCHES.map(b => ({
+    label: b.name,
+    data: revenueMode === 'monthly' ? revenueMonthly[b.id] : revenueQuarterly[b.id],
+    backgroundColor: COLORS[b.id] + 'cc',
+    borderColor: COLORS[b.id],
+    borderWidth: 1,
+    borderRadius: 4,
+  }));
+  charts.revenue = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:11} } } },
+      scales: {
+        x: { ticks: { color:'#64748b' }, grid: { color:'#1e293b' } },
+        y: { ticks: { color:'#64748b', callback: v => v.toLocaleString('ru') }, grid: { color:'#334155' } }
+      }
+    }
+  });
+}
+
+function buildDriverStatusChart() {
+  destroyChart('driverStatus');
+  const ctx = document.getElementById('driverStatusChart').getContext('2d');
+  charts.driverStatus = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['На линии','Перерыв','Офлайн'],
+      datasets: [{ data: [driverStatus.active, driverStatus.onBreak, driverStatus.offline],
+        backgroundColor: ['#34d399','#f59e0b','#475569'],
+        borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '70%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const total = driverStatus.active + driverStatus.onBreak + driverStatus.offline;
+  const legendEl = document.getElementById('driverLegend');
+  const items = [
+    { label:'На линии', val: driverStatus.active, color:'#34d399' },
+    { label:'Перерыв',  val: driverStatus.onBreak, color:'#f59e0b' },
+    { label:'Офлайн',   val: driverStatus.offline,  color:'#475569' },
+  ];
+  legendEl.innerHTML = items.map(i => `
+    <div class="flex items-center justify-between text-sm">
+      <div class="flex items-center gap-2">
+        <span class="dot" style="background:${i.color}"></span>
+        <span class="text-slate-300">${i.label}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-white">${i.val.toLocaleString('ru')}</span>
+        <span class="text-slate-500 text-xs">${(i.val/total*100).toFixed(0)}%</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildTripsChart() {
+  destroyChart('trips');
+  const ctx = document.getElementById('tripsChart').getContext('2d');
+  const weeks = Array.from({length:24}, (_,i) => `Н${i+1}`);
+
+  const branch = BRANCHES.find(b => b.id === activeTrip);
+  const dataset = {
+    label: branch.name,
+    data: tripsWeekly[activeTrip],
+    borderColor: COLORS[activeTrip],
+    backgroundColor: COLORS[activeTrip] + '22',
+    fill: true,
+    tension: 0.4,
+    pointRadius: 3,
+    pointHoverRadius: 6,
+  };
+
+  const avgVal = Math.round(tripsWeekly[activeTrip].reduce((a,c)=>a+c,0) / 24);
+  const avgLine = {
+    label: 'Среднее',
+    data: Array(24).fill(avgVal),
+    borderColor: '#475569',
+    borderDash: [6,4],
+    borderWidth: 1.5,
+    pointRadius: 0,
+    fill: false,
+  };
+
+  charts.trips = new Chart(ctx, {
+    type: 'line',
+    data: { labels: weeks, datasets: [dataset, avgLine] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:11} } } },
+      scales: {
+        x: { ticks: { color:'#64748b', maxTicksLimit:12 }, grid: { color:'#1e293b' } },
+        y: { ticks: { color:'#64748b' }, grid: { color:'#334155' } }
+      }
+    }
+  });
+}
+
+function buildRadarChart() {
+  destroyChart('radar');
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  const labels = ['Выручка','Поездки','Загрузка','Рейтинг','Ср. чек','Водители'];
+
+  function normalize(arr) {
+    const max = Math.max(...arr);
+    return arr.map(v => Math.round(v / max * 100));
+  }
+
+  const datasets = BRANCHES.map(b => {
+    const st = branchStats.find(s => s.id === b.id);
+    return {
+      label: b.name,
+      data: normalize([st.rev, st.trips, st.utilization, st.rating*20, st.avgTrip, st.drivers]),
+      borderColor: COLORS[b.id],
+      backgroundColor: COLORS[b.id] + '22',
+      pointBackgroundColor: COLORS[b.id],
+      borderWidth: 1.5,
+      pointRadius: 3,
+    };
+  });
+
+  charts.radar = new Chart(ctx, {
+    type: 'radar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:10, font:{size:10} } } },
+      scales: { r: {
+        grid: { color:'#334155' },
+        ticks: { display: false, stepSize: 25 },
+        pointLabels: { color:'#94a3b8', font:{size:10} },
+        suggestedMin: 0, suggestedMax: 100,
+      }}
+    }
+  });
+}
+
+// ─── KPI CARDS ───────────────────────────────────────────────────────────────
+
+function renderKPI() {
+  const totalRev    = branchStats.reduce((a,b)=>a+b.rev,0);
+  const totalTrips  = branchStats.reduce((a,b)=>a+b.trips,0);
+  const avgRating   = (branchStats.reduce((a,b)=>a+b.rating,0)/branchStats.length).toFixed(2);
+  const totalDrivers = branchStats.reduce((a,b)=>a+b.drivers,0);
+
+  const kpis = [
+    { label:'Общая выручка', value: (totalRev/1000).toFixed(1)+' млн ₽', delta:'+8.4%', up:true,  icon:'💰', sub:'За период' },
+    { label:'Всего поездок', value: totalTrips.toLocaleString('ru'), delta:'+12.1%', up:true,  icon:'🚗', sub:'За период' },
+    { label:'Средний рейтинг', value: avgRating+'★', delta:'-0.1%', up:false, icon:'⭐', sub:'По всем филиалам' },
+    { label:'Водителей',  value: totalDrivers.toLocaleString('ru'), delta:'+3.2%', up:true,  icon:'👤', sub:'Активных' },
+  ];
+
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
+    <div class="card kpi-card p-4">
+      <div class="flex items-start justify-between mb-2">
+        <span class="text-2xl">${k.icon}</span>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${k.up?'badge-up':'badge-down'}">${k.delta}</span>
+      </div>
+      <div class="text-2xl font-bold text-white mt-1">${k.value}</div>
+      <div class="text-slate-400 text-sm mt-0.5">${k.label}</div>
+      <div class="text-slate-600 text-xs mt-1">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─── BRANCH TABS ─────────────────────────────────────────────────────────────
+
+function renderTripTabs() {
+  document.getElementById('tripBranchTabs').innerHTML = BRANCHES.map(b => `
+    <div class="tab ${b.id===activeTrip?'active':''}" onclick="setTripBranch('${b.id}',this)">${b.name.split(' ')[0]}</div>
+  `).join('');
+}
+
+function setTripBranch(id, el) {
+  activeTrip = id;
+  document.querySelectorAll('#tripBranchTabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  buildTripsChart();
+}
+
+function setRevenueMode(mode, el) {
+  revenueMode = mode;
+  document.querySelectorAll('#revenueTabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  buildRevenueChart();
+}
+
+// ─── TABLE ───────────────────────────────────────────────────────────────────
+
+let tableData = [...branchStats];
+
+function renderTable(data) {
+  document.getElementById('branchTableBody').innerHTML = data.map(b => `
+    <tr>
+      <td><span class="mr-1">${b.flag}</span><span class="font-medium text-white">${b.name}</span></td>
+      <td class="hide-mobile font-semibold">${(b.rev/1000).toFixed(1)}&nbsp;млн&nbsp;₽</td>
+      <td>${b.trips.toLocaleString('ru')}</td>
+      <td class="hide-mobile">${b.drivers}</td>
+      <td class="hide-mobile">
+        <div class="flex items-center gap-2">
+          <div class="progress-bar w-20"><div class="progress-fill" style="width:${b.utilization}%"></div></div>
+          <span class="text-xs text-slate-400">${b.utilization}%</span>
+        </div>
+      </td>
+      <td>
+        <span style="color:${b.rating>=4.5?'#34d399':b.rating>=4.0?'#f59e0b':'#f87171'}">
+          ${b.rating}★
+        </span>
+      </td>
+      <td class="hide-mobile">${b.avgTrip.toLocaleString('ru')}&nbsp;₽</td>
+      <td>
+        <canvas class="trend-spark" id="spark-${b.id}"></canvas>
+      </td>
+    </tr>
+  `).join('');
+
+  // draw sparklines
+  data.forEach(b => {
+    const c = document.getElementById(`spark-${b.id}`);
+    if (!c) return;
+    const last = b.trend[b.trend.length-1];
+    const color = last >= 0 ? '#34d399' : '#f87171';
+    new Chart(c.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: b.trend.map((_,i)=>i),
+        datasets: [{ data: b.trend, borderColor: color, borderWidth: 1.5,
+          pointRadius: 0, fill: false, tension: 0.4 }]
+      },
+      options: {
+        responsive: false, animation: false,
+        plugins: { legend:{display:false}, tooltip:{enabled:false} },
+        scales: { x:{display:false}, y:{display:false} }
+      }
+    });
+  });
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
+  tableData.sort((a,b) => {
+    const av = key==='name' ? a.name : a[key];
+    const bv = key==='name' ? b.name : b[key];
+    return typeof av === 'string' ? av.localeCompare(bv)*sortDir : (av-bv)*sortDir;
+  });
+  renderTable(tableData);
+}
+
+function filterTable(q) {
+  const filtered = branchStats.filter(b => b.name.toLowerCase().includes(q.toLowerCase()));
+  renderTable(filtered);
+}
+
+// ─── TOP DRIVERS ─────────────────────────────────────────────────────────────
+
+function renderTopDrivers() {
+  document.getElementById('topDriversList').innerHTML = topDrivers.map((d,i) => `
+    <div class="flex items-center gap-3">
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+           style="background:${i<3?'#f59e0b':'#334155'};color:${i<3?'#000':'#94a3b8'}">${i+1}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium text-white truncate">${d.name}</div>
+        <div class="text-xs text-slate-500">${d.branch} · ${d.trips} поездок</div>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <div class="text-sm font-semibold" style="color:#f59e0b">${d.rating}★</div>
+        <div class="text-xs text-slate-500">${d.revenue} тыс.₽</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── ALERTS ──────────────────────────────────────────────────────────────────
+
+function renderAlerts() {
+  const bg = { warn:'#78350f', err:'#4c0519', info:'#0c4a6e', ok:'#064e3b' };
+  document.getElementById('alertsList').innerHTML = alerts.map(a => `
+    <div class="flex items-start gap-2 p-2.5 rounded-lg text-sm" style="background:${bg[a.type]}22;border:1px solid ${bg[a.type]}55">
+      <span class="mt-0.5">${a.icon}</span>
+      <div class="flex-1">
+        <div class="text-slate-200">${a.text}</div>
+        <div class="text-slate-500 text-xs mt-0.5">${a.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── REFRESH ─────────────────────────────────────────────────────────────────
+
+function refreshData() {
+  const btn = document.querySelector('button[onclick="refreshData()"]');
+  btn.innerHTML = '<span class="animate-spin inline-block">↻</span> Загрузка…';
+  setTimeout(() => {
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Обновить`;
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ru');
+  }, 800);
+}
+
+function exportCSV() {
+  const header = 'Филиал,Выручка (тыс.руб.),Поездки,Водителей,Загрузка (%),Рейтинг,Ср. чек (руб.)';
+  const rows = branchStats.map(b =>
+    `${b.name},${b.rev},${b.trips},${b.drivers},${b.utilization},${b.rating},${b.avgTrip}`
+  );
+  const csv = [header, ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+  a.download = 'taxi_branches.csv';
+  a.click();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  renderKPI();
+  renderTripTabs();
+  buildRevenueChart();
+  buildDriverStatusChart();
+  buildTripsChart();
+  buildRadarChart();
+  renderTable(tableData);
+  renderTopDrivers();
+  renderAlerts();
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ru');
+}
+
+init();
+</script>
+</body>
+</html>
