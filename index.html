@@ -1,612 +1,1051 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Аналитика филиалов таксопарка</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --accent: #f59e0b;
-      --accent-dark: #d97706;
-    }
-    body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
-    .kpi-card { transition: transform 0.2s, box-shadow 0.2s; }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-    .badge-up   { background: #064e3b; color: #34d399; }
-    .badge-down { background: #4c0519; color: #f87171; }
-    .tab { cursor: pointer; padding: 6px 16px; border-radius: 8px; font-size: 0.875rem; transition: background 0.15s; }
-    .tab.active { background: var(--accent); color: #000; font-weight: 600; }
-    .tab:not(.active):hover { background: #334155; }
-    select, input[type=date] {
-      background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
-      border-radius: 8px; padding: 6px 12px; font-size: 0.875rem; outline: none;
-    }
-    select:focus, input[type=date]:focus { border-color: var(--accent); }
-    .trend-spark { display: inline-block; width: 60px; height: 28px; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { background: #0f172a; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; text-align: left; }
-    tbody tr { border-top: 1px solid #334155; transition: background 0.1s; }
-    tbody tr:hover { background: #334155; }
-    td { padding: 12px 14px; font-size: 0.875rem; }
-    .progress-bar { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 3px; background: var(--accent); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-    .chart-wrap { position: relative; }
-    @media (max-width: 768px) { .hide-mobile { display: none; } }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DriveMe — Operations Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1f2d45;
+    --text:#f1f5f9;--muted:#64748b;--muted2:#94a3b8;
+    --green:#10b981;--green-bg:#052e1c;--green-border:#064e3b;
+    --yellow:#f59e0b;--yellow-bg:#2d1f00;--yellow-border:#78350f;
+    --red:#ef4444;--red-bg:#2d0a0a;--red-border:#7f1d1d;
+    --blue:#3b82f6;--blue-bg:#0d1f3c;
+    --accent:#6366f1;
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+  /* Glassmorphism */
+  .glass{background:rgba(17,24,39,0.8);backdrop-filter:blur(12px);border:1px solid var(--border)}
+  .glass-lite{background:rgba(26,34,53,0.6);backdrop-filter:blur(8px);border:1px solid rgba(31,45,69,0.8)}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .card-sm{background:var(--surface2);border:1px solid var(--border);border-radius:12px}
+
+  /* KPI Cards */
+  .kpi{border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+  .kpi:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,.5)}
+  .kpi::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;border-radius:50%;opacity:.06;transform:translate(30px,-30px)}
+  .kpi-green{background:linear-gradient(135deg,#064e3b,#065f46);border:1px solid #10b98133;color:#fff}
+  .kpi-green::before{background:#10b981}
+  .kpi-yellow{background:linear-gradient(135deg,#78350f,#92400e);border:1px solid #f59e0b33;color:#fff}
+  .kpi-yellow::before{background:#f59e0b}
+  .kpi-red{background:linear-gradient(135deg,#7f1d1d,#991b1b);border:1px solid #ef444433;color:#fff}
+  .kpi-red::before{background:#ef4444}
+  .kpi-blue{background:linear-gradient(135deg,#0d1f3c,#1e3a5f);border:1px solid #3b82f633;color:#fff}
+  .kpi-blue::before{background:#3b82f6}
+  .kpi-purple{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid #6366f133;color:#fff}
+  .kpi-purple::before{background:#6366f1}
+
+  /* Status pills */
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.03em}
+  .pill-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .pill-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
+  .pill-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+  /* Alert cards */
+  .alert{border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-left:3px solid}
+  .alert-red{background:rgba(127,29,29,.25);border-color:#ef4444}
+  .alert-yellow{background:rgba(120,53,15,.25);border-color:#f59e0b}
+  .alert-green{background:rgba(6,78,59,.25);border-color:#10b981}
+
+  /* Table */
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  thead th{background:rgba(10,14,26,.8);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;padding:12px 16px;position:sticky;top:0;z-index:1;font-weight:600}
+  tbody tr{transition:background .1s;cursor:default}
+  tbody tr:hover td{background:rgba(31,45,69,.5)}
+  td{padding:14px 16px;border-bottom:1px solid rgba(31,45,69,.5);vertical-align:middle}
+  td:first-child{border-radius:0}
+
+  /* Progress */
+  .bar{height:6px;background:rgba(31,45,69,.8);border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+  /* Metric value */
+  .val{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .val-lg{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .label{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+  /* Funnel */
+  .funnel-step{transition:all .2s}
+  .funnel-step:hover{filter:brightness(1.1)}
+
+  /* Dividers */
+  .divider{height:1px;background:var(--border);margin:0}
+
+  /* Scroll */
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+
+  /* Nav */
+  .nav-link{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted2);transition:all .15s;cursor:pointer;white-space:nowrap}
+  .nav-link:hover,.nav-link.active{background:rgba(99,102,241,.15);color:#818cf8}
+
+  /* Select */
+  select,input[type=date]{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:8px 14px;font-size:13px;outline:none;font-family:inherit;
+    transition:border-color .15s;cursor:pointer
+  }
+  select:focus,input[type=date]:focus{border-color:var(--accent)}
+  select option{background:var(--surface)}
+
+  /* Tooltip */
+  [data-tip]{position:relative}
+  [data-tip]:hover::after{
+    content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#1e293b;color:#f1f5f9;padding:6px 10px;border-radius:8px;font-size:11px;
+    white-space:nowrap;border:1px solid var(--border);pointer-events:none;z-index:99
+  }
+
+  /* Blink */
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+  .blink{animation:blink 2s infinite}
+
+  /* Dot */
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+  /* Rank badge */
+  .rank{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+
+  /* Gradient text */
+  .grad-green{background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .grad-red{background:linear-gradient(135deg,#ef4444,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .grad-yellow{background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+  @media(max-width:768px){
+    .hide-sm{display:none}
+    .val-lg{font-size:28px}
+    .val{font-size:22px}
+  }
+</style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="sticky top-0 z-40 border-b border-slate-700" style="background:#0f172acc;backdrop-filter:blur(12px)">
-  <div class="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
-    <div class="flex items-center gap-2 mr-auto">
-      <span class="text-2xl">🚕</span>
+<!-- TOP NAV -->
+<nav class="glass sticky top-0 z-50 border-b border-[#1f2d45]">
+  <div style="max-width:1600px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px">
+    <div style="display:flex;align-items:center;gap:10px;margin-right:8px;flex-shrink:0">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🚕</div>
       <div>
-        <div class="font-bold text-white text-base leading-tight">TaxiFleet Analytics</div>
-        <div class="text-slate-400 text-xs">Аналитика филиалов</div>
+        <div style="font-weight:800;font-size:15px;letter-spacing:-.02em">DriveMe</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.05em;margin-top:-2px">OPERATIONS HQ</div>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <span class="text-slate-400 text-sm hide-mobile">Период:</span>
-      <input type="date" id="dateFrom" value="2024-01-01" />
-      <span class="text-slate-400">—</span>
-      <input type="date" id="dateTo" value="2024-06-30" />
+    <div style="display:flex;gap:2px;overflow-x:auto;flex:1" id="navLinks">
+      <div class="nav-link active" onclick="scrollTo('ceo')">CEO Summary</div>
+      <div class="nav-link" onclick="scrollTo('ranking')">Рейтинг</div>
+      <div class="nav-link" onclick="scrollTo('hiring')">Найм</div>
+      <div class="nav-link" onclick="scrollTo('alerts')">Риски</div>
+      <div class="nav-link" onclick="scrollTo('auto')">Автопарк</div>
+      <div class="nav-link" onclick="scrollTo('dynamics')">Динамика</div>
     </div>
 
-    <select id="branchFilter">
-      <option value="all">Все филиалы</option>
-      <option value="msk">Москва</option>
-      <option value="spb">Санкт-Петербург</option>
-      <option value="ekb">Екатеринбург</option>
-      <option value="nsk">Новосибирск</option>
-      <option value="kzn">Казань</option>
-    </select>
-
-    <button onclick="refreshData()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style="background:var(--accent);color:#000">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Обновить
-    </button>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <select id="periodSel" onchange="applyFilters()" style="width:130px">
+        <option value="day">День</option>
+        <option value="month" selected>Месяц</option>
+      </select>
+      <select id="branchSel" onchange="applyFilters()" style="width:150px">
+        <option value="all">Все филиалы</option>
+        <option value="0">Днепр-1</option>
+        <option value="1">Запорожье</option>
+        <option value="2">Кривой Рог</option>
+        <option value="3">Полтава</option>
+        <option value="4">Днепр-2</option>
+        <option value="5">Винница</option>
+        <option value="6">Львов</option>
+      </select>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:7px 12px;font-size:12px;color:var(--muted2)">
+        📅 01.05.2026
+      </div>
+    </div>
   </div>
-</header>
+</nav>
 
-<main class="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
+<div style="max-width:1600px;margin:0 auto;padding:24px">
 
-  <!-- KPI CARDS -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpiRow"></div>
+<!-- ═══════════════════════════════════════════════════════════
+     CEO SUMMARY
+════════════════════════════════════════════════════════════ -->
+<section id="ceo">
 
-  <!-- CHARTS ROW 1 -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- Revenue bar chart -->
-    <div class="card p-4 lg:col-span-2">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <div class="font-semibold text-white">Выручка по филиалам</div>
-          <div class="text-slate-400 text-xs mt-0.5">тыс. ₽ · по месяцам</div>
+  <!-- Section header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">CEO Summary</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:2px">Общий статус сети · 01 мая 2026 · 7 филиалов</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="dot blink" style="background:#ef4444"></span>
+      <span style="font-size:12px;color:var(--muted)">Live</span>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px" id="kpiRow">
+  </div>
+
+  <!-- SUMMARY CHARTS ROW -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:16px;margin-bottom:24px" id="summaryRow">
+
+    <!-- Выручка vs план -->
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Касса vs план — по филиалам</div>
+      <div style="height:200px;position:relative"><canvas id="kassaChart"></canvas></div>
+    </div>
+
+    <!-- Бренд vs план -->
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Бренд % от плана</div>
+      <div style="height:200px;position:relative"><canvas id="brendChart"></canvas></div>
+    </div>
+
+    <!-- Network health -->
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Здоровье сети</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="card-sm" style="padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#10b981">94.25%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Касса сети</div>
+          <div class="bar" style="margin-top:8px"><div class="bar-fill" style="width:94%;background:#10b981"></div></div>
         </div>
-        <div class="flex gap-1" id="revenueTabs">
-          <div class="tab active" data-chart="revenue" data-mode="monthly" onclick="setRevenueMode('monthly',this)">Месяц</div>
-          <div class="tab" data-chart="revenue" data-mode="quarterly" onclick="setRevenueMode('quarterly',this)">Квартал</div>
+        <div class="card-sm" style="padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#ef4444">77.47%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Бренд сети</div>
+          <div class="bar" style="margin-top:8px"><div class="bar-fill" style="width:77%;background:#ef4444"></div></div>
+        </div>
+        <div class="card-sm" style="padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#f59e0b">80.45%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">% Загрузки</div>
+          <div class="bar" style="margin-top:8px"><div class="bar-fill" style="width:80%;background:#f59e0b"></div></div>
+        </div>
+        <div class="card-sm" style="padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#3b82f6">8399</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Авто в работе</div>
+          <div class="bar" style="margin-top:8px"><div class="bar-fill" style="width:81%;background:#3b82f6"></div></div>
         </div>
       </div>
-      <div class="chart-wrap" style="height:260px"><canvas id="revenueChart"></canvas></div>
-    </div>
 
-    <!-- Driver status doughnut -->
-    <div class="card p-4">
-      <div class="font-semibold text-white mb-1">Статус водителей</div>
-      <div class="text-slate-400 text-xs mb-4">На данный момент</div>
-      <div class="chart-wrap" style="height:180px"><canvas id="driverStatusChart"></canvas></div>
-      <div class="mt-4 space-y-2" id="driverLegend"></div>
-    </div>
-  </div>
-
-  <!-- CHARTS ROW 2 -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- Trips line -->
-    <div class="card p-4 lg:col-span-2">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <div class="font-semibold text-white">Количество поездок</div>
-          <div class="text-slate-400 text-xs mt-0.5">Динамика по неделям</div>
-        </div>
-        <div class="flex gap-1" id="tripBranchTabs"></div>
-      </div>
-      <div class="chart-wrap" style="height:240px"><canvas id="tripsChart"></canvas></div>
-    </div>
-
-    <!-- Rating radar -->
-    <div class="card p-4">
-      <div class="font-semibold text-white mb-1">Рейтинг филиалов</div>
-      <div class="text-slate-400 text-xs mb-4">По ключевым метрикам</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="radarChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- BRANCH TABLE -->
-  <div class="card overflow-hidden">
-    <div class="p-4 border-b border-slate-700 flex items-center justify-between">
-      <div>
-        <div class="font-semibold text-white">Сводная таблица филиалов</div>
-        <div class="text-slate-400 text-xs mt-0.5">За выбранный период</div>
-      </div>
-      <div class="flex gap-2">
-        <input type="text" id="tableSearch" placeholder="Поиск филиала…"
-          class="text-sm"
-          style="background:#0f172a;border:1px solid #475569;color:#e2e8f0;border-radius:8px;padding:6px 12px;outline:none;width:180px"
-          oninput="filterTable(this.value)" />
-        <button onclick="exportCSV()" class="px-3 py-1.5 rounded-lg text-xs border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors">
-          ↓ CSV
-        </button>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Статус по филиалам</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="branchStatusPills"></div>
       </div>
     </div>
-    <div class="overflow-x-auto">
-      <table id="branchTable">
-        <thead>
-          <tr>
-            <th onclick="sortTable('name')" class="cursor-pointer hover:text-white">Филиал ↕</th>
-            <th onclick="sortTable('revenue')" class="cursor-pointer hover:text-white hide-mobile">Выручка ↕</th>
-            <th onclick="sortTable('trips')" class="cursor-pointer hover:text-white">Поездки ↕</th>
-            <th onclick="sortTable('drivers')" class="cursor-pointer hover:text-white hide-mobile">Водителей</th>
-            <th onclick="sortTable('utilization')" class="cursor-pointer hover:text-white hide-mobile">Загрузка</th>
-            <th onclick="sortTable('rating')" class="cursor-pointer hover:text-white">Рейтинг</th>
-            <th onclick="sortTable('avgTrip')" class="cursor-pointer hover:text-white hide-mobile">Ср. чек</th>
-            <th>Тренд</th>
-          </tr>
-        </thead>
-        <tbody id="branchTableBody"></tbody>
-      </table>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FILIAL RANKING
+════════════════════════════════════════════════════════════ -->
+<section id="ranking" style="margin-top:40px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Рейтинг филиалов</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:2px">Сортировка от лучшего к худшему</div>
+    </div>
+    <div style="display:flex;gap:6px" id="rankSortBtns">
+      <button onclick="sortRanking('kassa')" class="rank-btn active-btn" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">% Касса</button>
+      <button onclick="sortRanking('brend')" class="rank-btn" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);font-size:12px;cursor:pointer">% Бренд</button>
+      <button onclick="sortRanking('utilization')" class="rank-btn" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);font-size:12px;cursor:pointer">Загрузка</button>
     </div>
   </div>
 
-  <!-- BOTTOM ROW -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <!-- Top drivers -->
-    <div class="card p-4">
-      <div class="font-semibold text-white mb-4">Топ-10 водителей</div>
-      <div class="space-y-2.5" id="topDriversList"></div>
-    </div>
+  <div class="card" style="overflow:hidden">
+    <table id="rankTable">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Филиал</th>
+          <th>Касса % плана</th>
+          <th>Бренд % плана</th>
+          <th class="hide-sm">NET Водители</th>
+          <th class="hide-sm">% Загрузки</th>
+          <th class="hide-sm">% Простоев</th>
+          <th>Статус</th>
+          <th class="hide-sm">Действие</th>
+        </tr>
+      </thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+  </div>
+</section>
 
-    <!-- Incidents / alerts -->
-    <div class="card p-4">
-      <div class="font-semibold text-white mb-4">Активные уведомления</div>
-      <div class="space-y-2" id="alertsList"></div>
-    </div>
+<!-- ═══════════════════════════════════════════════════════════
+     DRIVER HIRING FUNNEL
+════════════════════════════════════════════════════════════ -->
+<section id="hiring" style="margin-top:40px">
+  <div style="margin-bottom:20px">
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Найм водителей</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:2px">Воронка конверсии · Риски укомплектованности</div>
   </div>
 
-</main>
+  <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
 
-<footer class="text-center text-slate-600 text-xs py-6">
-  TaxiFleet Analytics · Данные обновлены: <span id="lastUpdate"></span>
-</footer>
+    <!-- Funnel -->
+    <div class="card" style="padding:24px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:20px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em">Воронка найма · Месяц</div>
+      <div id="funnelViz"></div>
+    </div>
+
+    <!-- Branch hiring table -->
+    <div class="card" style="padding:24px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:20px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em">NET Водители по филиалам</div>
+      <div id="netDriversList"></div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="height:160px;position:relative"><canvas id="hiringChart"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     EARLY WARNING SYSTEM
+════════════════════════════════════════════════════════════ -->
+<section id="alerts" style="margin-top:40px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="flex:1">
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Система раннего предупреждения</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:2px">Автоматическое выявление рисков и отклонений</div>
+    </div>
+    <span id="alertCount" class="pill pill-red" style="font-size:13px;padding:6px 14px"></span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="alertsGrid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     AUTO UTILIZATION
+════════════════════════════════════════════════════════════ -->
+<section id="auto" style="margin-top:40px">
+  <div style="margin-bottom:20px">
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Автопарк</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:2px">Загрузка, ремонт, простои, ДТП · 10 440 авто на номерах</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="autoKpiRow"></div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Статус автопарка по филиалам</div>
+      <div style="height:260px;position:relative"><canvas id="autoStackChart"></canvas></div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Структура ДТП</div>
+      <div style="height:180px;position:relative"><canvas id="dtpChart"></canvas></div>
+      <div id="dtpStats" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DYNAMICS
+════════════════════════════════════════════════════════════ -->
+<section id="dynamics" style="margin-top:40px;margin-bottom:40px">
+  <div style="margin-bottom:20px">
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Динамика</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:2px">Тренды ключевых метрик</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Выполнение плана по кассе — динамика</div>
+      <div style="height:200px;position:relative"><canvas id="dynKassaChart"></canvas></div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">NET Водители — динамика найма</div>
+      <div style="height:200px;position:relative"><canvas id="dynDriverChart"></canvas></div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">% Загрузки автопарка</div>
+      <div style="height:200px;position:relative"><canvas id="dynUtilChart"></canvas></div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Бренд — выполнение плана</div>
+      <div style="height:200px;position:relative"><canvas id="dynBrendChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /max-width -->
 
 <script>
-// ─── DATA ────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// REAL DATA FROM GOOGLE SHEETS (01.05.2026)
+// ═══════════════════════════════════════════════════════════
 
 const BRANCHES = [
-  { id:'msk', name:'Москва',           flag:'🏙️' },
-  { id:'spb', name:'Санкт-Петербург',  flag:'🌉' },
-  { id:'ekb', name:'Екатеринбург',     flag:'🏔️' },
-  { id:'nsk', name:'Новосибирск',      flag:'❄️' },
-  { id:'kzn', name:'Казань',           flag:'🕌' },
+  { id:'dnpr1', name:'Днепр-1',    flag:'🔵', city:'Днепр' },
+  { id:'zapo',  name:'Запорожье',  flag:'🟠', city:'Запорожье' },
+  { id:'kriv',  name:'Кривой Рог', flag:'🟤', city:'Кривой Рог' },
+  { id:'polt',  name:'Полтава',    flag:'🟡', city:'Полтава' },
+  { id:'dnpr2', name:'Днепр-2',    flag:'🔵', city:'Днепр' },
+  { id:'vinn',  name:'Винница',    flag:'🟣', city:'Винница' },
+  { id:'lvov',  name:'Львов',      flag:'🟢', city:'Львов' },
 ];
 
-const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн'];
-const QUARTERS = ['Q1 2024','Q2 2024'];
-
-const BASE_REVENUE = { msk:18400, spb:11200, ekb:7800, nsk:6900, kzn:5400 };
-const BASE_TRIPS   = { msk:42000, spb:26000, ekb:18000, nsk:15500, kzn:12000 };
-
-function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
-
-function genMonthly(base, months=6, growthRate=0.04) {
-  return Array.from({length: months}, (_, i) => Math.round(base * Math.pow(1 + growthRate, i) * (0.9 + Math.random() * 0.2)));
-}
-
-const revenueMonthly = {};
-const tripsWeekly    = {};
-BRANCHES.forEach(b => {
-  revenueMonthly[b.id] = genMonthly(BASE_REVENUE[b.id] / 6);
-  tripsWeekly[b.id]    = Array.from({length:24}, (_, i) =>
-    Math.round(BASE_TRIPS[b.id] / 24 * (0.85 + Math.random() * 0.3)));
-});
-
-const revenueQuarterly = {};
-BRANCHES.forEach(b => {
-  revenueQuarterly[b.id] = [
-    revenueMonthly[b.id].slice(0,3).reduce((a,c)=>a+c,0),
-    revenueMonthly[b.id].slice(3,6).reduce((a,c)=>a+c,0),
-  ];
-});
-
-const branchStats = BRANCHES.map(b => {
-  const rev = revenueMonthly[b.id].reduce((a,c)=>a+c,0);
-  const trips = tripsWeekly[b.id].reduce((a,c)=>a+c,0);
-  const drivers = rand(120, 900);
-  const utilization = rand(62, 94);
-  const rating = (3.8 + Math.random() * 1.2).toFixed(1);
-  const avgTrip = Math.round(rev * 1000 / trips);
-  const trend = Array.from({length:6}, () => rand(-5, 15));
-  return { ...b, rev, trips, drivers, utilization, rating: parseFloat(rating), avgTrip, trend };
-});
-
-const driverStatus = { active: 1840, onBreak: 420, offline: 390 };
-
-const topDrivers = Array.from({length:10}, (_, i) => ({
-  name: ['Алексей Иванов','Дмитрий Смирнов','Сергей Попов','Андрей Козлов','Михаил Новиков',
-         'Павел Морозов','Иван Волков','Николай Соколов','Артём Лебедев','Владимир Зайцев'][i],
-  branch: BRANCHES[i % BRANCHES.length].name,
-  trips: rand(280, 450),
-  rating: (4.5 + Math.random() * 0.5).toFixed(2),
-  revenue: rand(180, 420),
-}));
-
-const alerts = [
-  { type:'warn', icon:'⚠️', text:'Загрузка автопарка Екатеринбург ниже нормы (58%)', time:'10 мин назад' },
-  { type:'err',  icon:'🔴', text:'3 жалобы на водителя #4821 — Казань', time:'25 мин назад' },
-  { type:'info', icon:'🔵', text:'Плановое ТО: 14 автомобилей — Москва', time:'1 час назад' },
-  { type:'ok',   icon:'🟢', text:'Рекорд выручки — Санкт-Петербург (ср. вт.)', time:'2 часа назад' },
-  { type:'warn', icon:'⚠️', text:'Пиковая нагрузка ожидается в 18:00 — Новосибирск', time:'3 часа назад' },
-  { type:'info', icon:'🔵', text:'Новый водитель #5102 прошёл верификацию', time:'5 часов назад' },
+// Авто (месяц)
+const autoData = [
+  // [на номерах, СТО, ДТП, ремонт, штраф, простой, в работе]
+  [1470, 107.5, 86.0, 163.5, 30,  58.0, 1218.5],  // Днепр-1
+  [1290, 101.0, 72.0, 147.0, 26,  148.5, 968.5],  // Запорожье
+  [1500, 186.5, 54.5, 211.0, 30,  44.5, 1214.5],  // Кривой Рог
+  [1920, 156.5, 76.0, 202.5, 30,  46.5, 1641.0],  // Полтава
+  [2130, 223.5, 131.5, 265.0, 90, 156.0, 1619.0], // Днепр-2
+  [900,  25.5,  131.5, 157.0, 0,  95.5,  647.5],  // Винница
+  [1230, 18.5,  20.0,  38.5,  6,  101.0, 1090.5], // Львов
 ];
 
-// ─── CHARTS ──────────────────────────────────────────────────────────────────
+// Загрузка %
+const utilization = [82.89, 75.08, 80.97, 85.47, 76.01, 71.94, 92.68];
+const downtime     = [3.95,  11.51, 2.97,  2.42,  7.32,  10.61, 8.21];
 
-const COLORS = {
-  msk: '#f59e0b', spb: '#38bdf8', ekb: '#a78bfa', nsk: '#34d399', kzn: '#fb7185'
-};
-const COLOR_LIST = Object.values(COLORS);
+// Касса
+const kassaFact = [5590406, 4274125, 4496125, 5671237, 7468478, 2034333, 4817764];
+const kassaPlan = [5850000, 4850000, 4750000, 5800000, 8300000, 2400000, 4500000];
+const kassaPct  = [95.56, 88.13, 94.66, 97.78, 89.98, 84.76, 107.06];
+const kassaAvg  = [4588,  4413,  3702,  3456,  4613,  3142,  4418]; // средняя с авто
 
-let charts = {};
-let revenueMode = 'monthly';
-let activeTrip = 'msk';
-let sortKey = 'revenue', sortDir = -1;
+// Бренд
+const brendFact = [147000, 155627, 123000, 329000, 205000, 109500, 386000];
+const brendPlan = [220500, 154800, 135000, 403200, 319500, 202500, 442800];
+const brendPct  = [66.67, 100.53, 91.11, 81.60, 64.16, 54.07, 87.17];
+const tripsDay  = [30393, 26125, 29530, 41586, 41837, 14789, 28020];
+const tripsAvg  = [24.94, 26.97, 24.31, 25.34, 25.34, 22.84, 25.69];
 
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+// ДТП
+const dtpTotal  = [9, 6, 6, 7, 13, 4, 7];
+const dtpFault  = [8, 3, 4, 4, 4, 2, 3];
+const damage    = [22, 5, 14, 15, 16, 2, 11];
+
+// Водители
+const applications = [57, 45, 86, 45, 53, 43, 133];
+const interviews   = [36, 19, 40, 36, 37, 33, 41];
+const newDrivers   = [20, 6, 23, 31, 26, 15, 31];
+const firedDrivers = [25, 11, 18, 9, 25, 16, 31];
+
+// NET
+const netDrivers = newDrivers.map((n,i) => n - firedDrivers[i]);
+
+// Conv rates
+const convApp2Int  = interviews.map((v,i) => applications[i] > 0 ? +(v/applications[i]*100).toFixed(1) : 0);
+const convInt2Hire = newDrivers.map((v,i) => interviews[i] > 0 ? +(v/interviews[i]*100).toFixed(1) : 0);
+
+// Totals
+const totalApps       = applications.reduce((a,b)=>a+b,0);
+const totalInterviews = interviews.reduce((a,b)=>a+b,0);
+const totalNew        = newDrivers.reduce((a,b)=>a+b,0);
+const totalFired      = firedDrivers.reduce((a,b)=>a+b,0);
+const totalNET        = totalNew - totalFired;
+
+const totalKassaFact  = kassaFact.reduce((a,b)=>a+b,0);
+const totalKassaPlan  = kassaPlan.reduce((a,b)=>a+b,0);
+const networkKassaPct = +(totalKassaFact/totalKassaPlan*100).toFixed(2);
+const totalBrendFact  = brendFact.reduce((a,b)=>a+b,0);
+const totalBrendPlan  = brendPlan.reduce((a,b)=>a+b,0);
+const networkBrendPct = +(totalBrendFact/totalBrendPlan*100).toFixed(2);
+const totalAutoWork   = autoData.reduce((s,r)=>s+r[6],0);
+const totalAutoTotal  = autoData.reduce((s,r)=>s+r[0],0);
+const avgUtilization  = +(utilization.reduce((a,b)=>a+b,0)/7).toFixed(1);
+const totalDTP        = dtpTotal.reduce((a,b)=>a+b,0);
+
+// ═══ HELPERS ═══
+function pctColor(v, hi=100, mid=90){
+  if(v>=hi) return '#10b981';
+  if(v>=mid) return '#f59e0b';
+  return '#ef4444';
+}
+function pctClass(v, hi=100, mid=90){
+  if(v>=hi) return 'pill-green';
+  if(v>=mid) return 'pill-yellow';
+  return 'pill-red';
+}
+function pctIcon(v, hi=100, mid=90){
+  if(v>=hi) return '🟢';
+  if(v>=mid) return '🟡';
+  return '🔴';
+}
+function arrow(v){ return v>0?'↑':v<0?'↓':'→' }
+function arrowColor(v){ return v>0?'#10b981':v<0?'#ef4444':'#64748b' }
+function fmt(n){ return n.toLocaleString('ru') }
+function fmtM(n){ return (n/1000000).toFixed(2)+'M' }
+
+// ═══ STATUS ═══
+function branchStatus(i){
+  const kPct = kassaPct[i];
+  const bPct = brendPct[i];
+  const net  = netDrivers[i];
+  if(kPct < 90 || bPct < 70 || net < -10) return 'critical';
+  if(kPct < 95 || bPct < 85 || net < 0)   return 'warning';
+  return 'excellent';
 }
 
-function buildRevenueChart() {
-  destroyChart('revenue');
-  const ctx = document.getElementById('revenueChart').getContext('2d');
-  const labels = revenueMode === 'monthly' ? MONTHS : QUARTERS;
-  const datasets = BRANCHES.map(b => ({
-    label: b.name,
-    data: revenueMode === 'monthly' ? revenueMonthly[b.id] : revenueQuarterly[b.id],
-    backgroundColor: COLORS[b.id] + 'cc',
-    borderColor: COLORS[b.id],
-    borderWidth: 1,
-    borderRadius: 4,
-  }));
-  charts.revenue = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:11} } } },
-      scales: {
-        x: { ticks: { color:'#64748b' }, grid: { color:'#1e293b' } },
-        y: { ticks: { color:'#64748b', callback: v => v.toLocaleString('ru') }, grid: { color:'#334155' } }
-      }
-    }
-  });
-}
-
-function buildDriverStatusChart() {
-  destroyChart('driverStatus');
-  const ctx = document.getElementById('driverStatusChart').getContext('2d');
-  charts.driverStatus = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['На линии','Перерыв','Офлайн'],
-      datasets: [{ data: [driverStatus.active, driverStatus.onBreak, driverStatus.offline],
-        backgroundColor: ['#34d399','#f59e0b','#475569'],
-        borderWidth: 0, hoverOffset: 6 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '70%',
-      plugins: { legend: { display: false } }
-    }
-  });
-
-  const total = driverStatus.active + driverStatus.onBreak + driverStatus.offline;
-  const legendEl = document.getElementById('driverLegend');
-  const items = [
-    { label:'На линии', val: driverStatus.active, color:'#34d399' },
-    { label:'Перерыв',  val: driverStatus.onBreak, color:'#f59e0b' },
-    { label:'Офлайн',   val: driverStatus.offline,  color:'#475569' },
-  ];
-  legendEl.innerHTML = items.map(i => `
-    <div class="flex items-center justify-between text-sm">
-      <div class="flex items-center gap-2">
-        <span class="dot" style="background:${i.color}"></span>
-        <span class="text-slate-300">${i.label}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="font-semibold text-white">${i.val.toLocaleString('ru')}</span>
-        <span class="text-slate-500 text-xs">${(i.val/total*100).toFixed(0)}%</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function buildTripsChart() {
-  destroyChart('trips');
-  const ctx = document.getElementById('tripsChart').getContext('2d');
-  const weeks = Array.from({length:24}, (_,i) => `Н${i+1}`);
-
-  const branch = BRANCHES.find(b => b.id === activeTrip);
-  const dataset = {
-    label: branch.name,
-    data: tripsWeekly[activeTrip],
-    borderColor: COLORS[activeTrip],
-    backgroundColor: COLORS[activeTrip] + '22',
-    fill: true,
-    tension: 0.4,
-    pointRadius: 3,
-    pointHoverRadius: 6,
-  };
-
-  const avgVal = Math.round(tripsWeekly[activeTrip].reduce((a,c)=>a+c,0) / 24);
-  const avgLine = {
-    label: 'Среднее',
-    data: Array(24).fill(avgVal),
-    borderColor: '#475569',
-    borderDash: [6,4],
-    borderWidth: 1.5,
-    pointRadius: 0,
-    fill: false,
-  };
-
-  charts.trips = new Chart(ctx, {
-    type: 'line',
-    data: { labels: weeks, datasets: [dataset, avgLine] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:12, font:{size:11} } } },
-      scales: {
-        x: { ticks: { color:'#64748b', maxTicksLimit:12 }, grid: { color:'#1e293b' } },
-        y: { ticks: { color:'#64748b' }, grid: { color:'#334155' } }
-      }
-    }
-  });
-}
-
-function buildRadarChart() {
-  destroyChart('radar');
-  const ctx = document.getElementById('radarChart').getContext('2d');
-  const labels = ['Выручка','Поездки','Загрузка','Рейтинг','Ср. чек','Водители'];
-
-  function normalize(arr) {
-    const max = Math.max(...arr);
-    return arr.map(v => Math.round(v / max * 100));
-  }
-
-  const datasets = BRANCHES.map(b => {
-    const st = branchStats.find(s => s.id === b.id);
-    return {
-      label: b.name,
-      data: normalize([st.rev, st.trips, st.utilization, st.rating*20, st.avgTrip, st.drivers]),
-      borderColor: COLORS[b.id],
-      backgroundColor: COLORS[b.id] + '22',
-      pointBackgroundColor: COLORS[b.id],
-      borderWidth: 1.5,
-      pointRadius: 3,
-    };
-  });
-
-  charts.radar = new Chart(ctx, {
-    type: 'radar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color:'#94a3b8', boxWidth:10, font:{size:10} } } },
-      scales: { r: {
-        grid: { color:'#334155' },
-        ticks: { display: false, stepSize: 25 },
-        pointLabels: { color:'#94a3b8', font:{size:10} },
-        suggestedMin: 0, suggestedMax: 100,
-      }}
-    }
-  });
-}
-
-// ─── KPI CARDS ───────────────────────────────────────────────────────────────
-
-function renderKPI() {
-  const totalRev    = branchStats.reduce((a,b)=>a+b.rev,0);
-  const totalTrips  = branchStats.reduce((a,b)=>a+b.trips,0);
-  const avgRating   = (branchStats.reduce((a,b)=>a+b.rating,0)/branchStats.length).toFixed(2);
-  const totalDrivers = branchStats.reduce((a,b)=>a+b.drivers,0);
-
+// ═══ KPI CARDS ═══
+function renderKPI(){
   const kpis = [
-    { label:'Общая выручка', value: (totalRev/1000).toFixed(1)+' млн ₽', delta:'+8.4%', up:true,  icon:'💰', sub:'За период' },
-    { label:'Всего поездок', value: totalTrips.toLocaleString('ru'), delta:'+12.1%', up:true,  icon:'🚗', sub:'За период' },
-    { label:'Средний рейтинг', value: avgRating+'★', delta:'-0.1%', up:false, icon:'⭐', sub:'По всем филиалам' },
-    { label:'Водителей',  value: totalDrivers.toLocaleString('ru'), delta:'+3.2%', up:true,  icon:'👤', sub:'Активных' },
+    {
+      title:'% Плана (Касса)',
+      val: networkKassaPct+'%',
+      sub:`${fmtM(totalKassaFact)} / ${fmtM(totalKassaPlan)} грн`,
+      cls: networkKassaPct>=100?'kpi-green':networkKassaPct>=90?'kpi-yellow':'kpi-red',
+      icon:'💰', delta:'+0.3% к прош. периоду', up:true,
+      bar: networkKassaPct,
+    },
+    {
+      title:'% Плана (Бренд)',
+      val: networkBrendPct+'%',
+      sub:`${fmt(totalBrendFact)} / ${fmt(totalBrendPlan)} поездок`,
+      cls: networkBrendPct>=100?'kpi-green':networkBrendPct>=90?'kpi-yellow':'kpi-red',
+      icon:'🎯', delta:'-5.1% к прош. периоду', up:false,
+      bar: networkBrendPct,
+    },
+    {
+      title:'NET Водители',
+      val:(totalNET>0?'+':'')+totalNET,
+      sub:`+${totalNew} новых · -${totalFired} уволено`,
+      cls: totalNET>0?'kpi-green':totalNET===0?'kpi-yellow':'kpi-red',
+      icon:'👤', delta: totalNET>0?'Прирост команды':'Убыль команды', up:totalNET>0,
+      bar: Math.min(100, (totalNew/(totalFired||1)*100)),
+    },
+    {
+      title:'Авто в работе',
+      val:fmt(Math.round(totalAutoWork)),
+      sub:`из ${fmt(totalAutoTotal)} на номерах`,
+      cls:'kpi-blue',
+      icon:'🚗', delta:`${avgUtilization}% загрузка`, up:true,
+      bar: avgUtilization,
+    },
+    {
+      title:'% Загрузки',
+      val:avgUtilization+'%',
+      sub:'Средняя по сети',
+      cls: avgUtilization>=85?'kpi-green':avgUtilization>=75?'kpi-yellow':'kpi-red',
+      icon:'📊', delta:'Цель: 85%+', up:avgUtilization>=85,
+      bar: avgUtilization,
+    },
+    {
+      title:'ДТП (месяц)',
+      val:totalDTP,
+      sub:`${dtpFault.reduce((a,b)=>a+b,0)} по нашей вине`,
+      cls:'kpi-red',
+      icon:'⚠️', delta:damage.reduce((a,b)=>a+b,0)+' повреждений', up:false,
+      bar: 100 - Math.min(100, totalDTP/2),
+    },
   ];
 
-  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
-    <div class="card kpi-card p-4">
-      <div class="flex items-start justify-between mb-2">
-        <span class="text-2xl">${k.icon}</span>
-        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${k.up?'badge-up':'badge-down'}">${k.delta}</span>
+  document.getElementById('kpiRow').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <span style="font-size:28px">${k.icon}</span>
+        <span style="font-size:11px;opacity:.7;font-weight:600;text-transform:uppercase;letter-spacing:.06em">${k.title}</span>
       </div>
-      <div class="text-2xl font-bold text-white mt-1">${k.value}</div>
-      <div class="text-slate-400 text-sm mt-0.5">${k.label}</div>
-      <div class="text-slate-600 text-xs mt-1">${k.sub}</div>
+      <div class="val" style="color:#fff;margin-bottom:4px">${k.val}</div>
+      <div style="font-size:12px;opacity:.7;margin-bottom:12px">${k.sub}</div>
+      <div style="height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${Math.min(100,k.bar)}%;background:rgba(255,255,255,.5);border-radius:2px"></div>
+      </div>
+      <div style="font-size:11px;opacity:.65;display:flex;align-items:center;gap:4px">
+        <span style="color:${k.up?'#6ee7b7':'#fca5a5'}">${k.up?'↑':'↓'}</span>
+        ${k.delta}
+      </div>
     </div>
   `).join('');
 }
 
-// ─── BRANCH TABS ─────────────────────────────────────────────────────────────
-
-function renderTripTabs() {
-  document.getElementById('tripBranchTabs').innerHTML = BRANCHES.map(b => `
-    <div class="tab ${b.id===activeTrip?'active':''}" onclick="setTripBranch('${b.id}',this)">${b.name.split(' ')[0]}</div>
-  `).join('');
+// ═══ BRANCH STATUS PILLS ═══
+function renderBranchPills(){
+  document.getElementById('branchStatusPills').innerHTML = BRANCHES.map((b,i)=>{
+    const s = branchStatus(i);
+    const icon = s==='excellent'?'🟢':s==='warning'?'🟡':'🔴';
+    const cls  = s==='excellent'?'pill-green':s==='warning'?'pill-yellow':'pill-red';
+    return `<span class="pill ${cls}">${icon} ${b.name}</span>`;
+  }).join('');
 }
 
-function setTripBranch(id, el) {
-  activeTrip = id;
-  document.querySelectorAll('#tripBranchTabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  buildTripsChart();
+// ═══ RANKING TABLE ═══
+let rankSortKey = 'kassa';
+function sortRanking(key){
+  rankSortKey = key;
+  document.querySelectorAll('.rank-btn').forEach(b => {
+    b.style.color = b.textContent.toLowerCase().includes(
+      key==='kassa'?'касса':key==='brend'?'бренд':'загрузка'
+    ) ? 'var(--text)' : 'var(--muted2)';
+    b.style.background = b.textContent.toLowerCase().includes(
+      key==='kassa'?'касса':key==='brend'?'бренд':'загрузка'
+    ) ? 'rgba(99,102,241,.2)' : 'var(--surface2)';
+  });
+  renderRanking();
 }
 
-function setRevenueMode(mode, el) {
-  revenueMode = mode;
-  document.querySelectorAll('#revenueTabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  buildRevenueChart();
+function renderRanking(){
+  const sorted = BRANCHES.map((b,i)=>({...b,i,
+    kassa:kassaPct[i], brend:brendPct[i], util:utilization[i],
+    net:netDrivers[i], down:downtime[i], status:branchStatus(i),
+  })).sort((a,b)=> b[rankSortKey==='kassa'?'kassa':rankSortKey==='brend'?'brend':'util'] - a[rankSortKey==='kassa'?'kassa':rankSortKey==='brend'?'brend':'util']);
+
+  document.getElementById('rankBody').innerHTML = sorted.map((b,rank)=>{
+    const sIcon = b.status==='excellent'?'🟢 Отлично':b.status==='warning'?'🟡 Внимание':'🔴 Критично';
+    const sCls  = b.status==='excellent'?'pill-green':b.status==='warning'?'pill-yellow':'pill-red';
+    const netColor = b.net>0?'#10b981':b.net<0?'#ef4444':'#64748b';
+    const rankBg = rank===0?'#065f46':rank===1?'#1e3a5f':rank===2?'#312e81':'#1a2235';
+    const action = b.status==='critical'?'🔴 Срочный контроль':b.status==='warning'?'🟡 Мониторинг':'✅ Норма';
+    return `
+      <tr>
+        <td><div class="rank" style="background:${rankBg};color:#fff">${rank+1}</div></td>
+        <td><span style="font-size:16px;margin-right:6px">${b.flag}</span><b>${b.name}</b></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:16px;font-weight:700;color:${pctColor(b.kassa)}">${b.kassa}%</span>
+            <div class="bar" style="width:80px"><div class="bar-fill" style="width:${Math.min(100,b.kassa)}%;background:${pctColor(b.kassa)}"></div></div>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:16px;font-weight:700;color:${pctColor(b.brend,100,85)}">${b.brend}%</span>
+            <div class="bar" style="width:80px"><div class="bar-fill" style="width:${Math.min(100,b.brend)}%;background:${pctColor(b.brend,100,85)}"></div></div>
+          </div>
+        </td>
+        <td class="hide-sm"><span style="font-size:16px;font-weight:700;color:${netColor}">${b.net>0?'+':''}${b.net}</span></td>
+        <td class="hide-sm"><span style="font-size:15px;font-weight:600;color:${pctColor(b.util,85,75)}">${b.util}%</span></td>
+        <td class="hide-sm"><span style="font-size:15px;font-weight:600;color:${b.down>8?'#ef4444':b.down>5?'#f59e0b':'#10b981'}">${b.down}%</span></td>
+        <td><span class="pill ${sCls}">${sIcon}</span></td>
+        <td class="hide-sm" style="font-size:12px;color:var(--muted2)">${action}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
-// ─── TABLE ───────────────────────────────────────────────────────────────────
+// ═══ HIRING FUNNEL ═══
+function renderFunnel(){
+  const steps = [
+    { label:'📋 Заявки',        val: totalApps,       color:'#6366f1', pct:100 },
+    { label:'🎤 Собеседования',  val: totalInterviews, color:'#3b82f6', pct:+(totalInterviews/totalApps*100).toFixed(0) },
+    { label:'✅ Новые водители',  val: totalNew,        color:'#10b981', pct:+(totalNew/totalApps*100).toFixed(0) },
+    { label:'❌ Уволено',         val: totalFired,      color:'#ef4444', pct:+(totalFired/totalApps*100).toFixed(0) },
+    { label:'📈 NET Drivers',    val: totalNET,        color: totalNET>=0?'#10b981':'#ef4444', pct:null },
+  ];
 
-let tableData = [...branchStats];
-
-function renderTable(data) {
-  document.getElementById('branchTableBody').innerHTML = data.map(b => `
-    <tr>
-      <td><span class="mr-1">${b.flag}</span><span class="font-medium text-white">${b.name}</span></td>
-      <td class="hide-mobile font-semibold">${(b.rev/1000).toFixed(1)}&nbsp;млн&nbsp;₽</td>
-      <td>${b.trips.toLocaleString('ru')}</td>
-      <td class="hide-mobile">${b.drivers}</td>
-      <td class="hide-mobile">
-        <div class="flex items-center gap-2">
-          <div class="progress-bar w-20"><div class="progress-fill" style="width:${b.utilization}%"></div></div>
-          <span class="text-xs text-slate-400">${b.utilization}%</span>
+  document.getElementById('funnelViz').innerHTML = steps.map((s,i)=>`
+    <div style="margin-bottom:${i<steps.length-1?'6px':'0'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600">${s.label}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${s.pct!==null?`<span style="font-size:11px;color:var(--muted)">${s.pct}% от заявок</span>`:''}
+          <span style="font-size:18px;font-weight:800;color:${s.color}">${s.val>0?'+':''}${s.val}</span>
         </div>
-      </td>
-      <td>
-        <span style="color:${b.rating>=4.5?'#34d399':b.rating>=4.0?'#f59e0b':'#f87171'}">
-          ${b.rating}★
-        </span>
-      </td>
-      <td class="hide-mobile">${b.avgTrip.toLocaleString('ru')}&nbsp;₽</td>
-      <td>
-        <canvas class="trend-spark" id="spark-${b.id}"></canvas>
-      </td>
-    </tr>
-  `).join('');
+      </div>
+      ${s.pct!==null?`
+      <div class="bar">
+        <div class="bar-fill" style="width:${s.pct}%;background:${s.color};height:10px;border-radius:4px"></div>
+      </div>
+      `:'<div style="height:2px;background:var(--border);margin:4px 0"></div>'}
+    </div>
+  `).join('')+`
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="card-sm" style="padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Заявка → Собесед.</div>
+        <div style="font-size:22px;font-weight:800;color:#3b82f6">${+(totalInterviews/totalApps*100).toFixed(1)}%</div>
+      </div>
+      <div class="card-sm" style="padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Собесед. → Водитель</div>
+        <div style="font-size:22px;font-weight:800;color:#10b981">${+(totalNew/totalInterviews*100).toFixed(1)}%</div>
+      </div>
+    </div>
+  `;
+}
 
-  // draw sparklines
-  data.forEach(b => {
-    const c = document.getElementById(`spark-${b.id}`);
-    if (!c) return;
-    const last = b.trend[b.trend.length-1];
-    const color = last >= 0 ? '#34d399' : '#f87171';
-    new Chart(c.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: b.trend.map((_,i)=>i),
-        datasets: [{ data: b.trend, borderColor: color, borderWidth: 1.5,
-          pointRadius: 0, fill: false, tension: 0.4 }]
-      },
-      options: {
-        responsive: false, animation: false,
-        plugins: { legend:{display:false}, tooltip:{enabled:false} },
-        scales: { x:{display:false}, y:{display:false} }
+function renderNetDrivers(){
+  document.getElementById('netDriversList').innerHTML = BRANCHES.map((b,i)=>{
+    const net = netDrivers[i];
+    const color = net>0?'#10b981':net<0?'#ef4444':'#64748b';
+    const maxAbs = Math.max(...netDrivers.map(Math.abs), 1);
+    const barW = Math.abs(net)/maxAbs*100;
+    return `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:80px;font-size:12px;font-weight:600;flex-shrink:0">${b.name}</div>
+        <div style="flex:1;position:relative;height:20px;display:flex;align-items:center">
+          <div style="position:absolute;left:50%;width:1px;height:100%;background:var(--border)"></div>
+          ${net>=0
+            ? `<div style="position:absolute;left:50%;width:${barW/2}%;height:8px;background:${color};border-radius:0 4px 4px 0"></div>`
+            : `<div style="position:absolute;right:50%;width:${barW/2}%;height:8px;background:${color};border-radius:4px 0 0 4px"></div>`
+          }
+        </div>
+        <div style="width:40px;text-align:right;font-weight:700;color:${color};font-size:14px">${net>0?'+':''}${net}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══ ALERTS ═══
+function renderAlerts(){
+  const alerts = [];
+
+  BRANCHES.forEach((b,i)=>{
+    if(kassaPct[i]<90){
+      alerts.push({
+        level:'critical',
+        title:`${b.name} — Касса критически низкая`,
+        msg:`Выполнение: ${kassaPct[i]}% (план ${fmtM(kassaPlan[i])} грн). Отставание ${fmtM(kassaPlan[i]-kassaFact[i])} грн.`,
+        action:'Немедленный созвон с руководителем филиала',
+      });
+    } else if(kassaPct[i]<95){
+      alerts.push({
+        level:'warning',
+        title:`${b.name} — Касса ниже нормы`,
+        msg:`Выполнение: ${kassaPct[i]}% (цель 100%). Риск провала месячного плана.`,
+        action:'Проверить причины недовыполнения',
+      });
+    }
+
+    if(brendPct[i]<70){
+      alerts.push({
+        level:'critical',
+        title:`${b.name} — Бренд критически низкий`,
+        msg:`Выполнение по бренду: ${brendPct[i]}% — значительное отставание от плана ${fmt(brendPlan[i])}.`,
+        action:'Анализ причин снижения поездок. Проверить водителей на смене.',
+      });
+    } else if(brendPct[i]<90){
+      alerts.push({
+        level:'warning',
+        title:`${b.name} — Бренд под угрозой`,
+        msg:`Выполнение по бренду: ${brendPct[i]}%. Средн. поездок/авто: ${tripsAvg[i]}/25 (план).`,
+        action:'Мониторинг суточной активности',
+      });
+    }
+
+    if(netDrivers[i]<0){
+      alerts.push({
+        level:'critical',
+        title:`${b.name} — Убыль водителей`,
+        msg:`NET: ${netDrivers[i]} (новых ${newDrivers[i]}, уволено ${firedDrivers[i]}). Риск нехватки кадров.`,
+        action:'Срочно усилить воронку найма',
+      });
+    }
+
+    if(downtime[i]>8){
+      alerts.push({
+        level:'warning',
+        title:`${b.name} — Высокий % простоев`,
+        msg:`Простои: ${downtime[i]}% — выше нормы 5%. Авто выбывают из оборота.`,
+        action:'Проверить причины простоев, ускорить ремонт',
+      });
+    }
+  });
+
+  // Positive alert
+  const best = kassaPct.indexOf(Math.max(...kassaPct));
+  alerts.unshift({
+    level:'ok',
+    title:`${BRANCHES[best].name} — Лучший результат месяца`,
+    msg:`Касса: ${kassaPct[best]}% — единственный филиал выше 100%. Выручка: ${fmtM(kassaFact[best])} грн.`,
+    action:'Распространить лучшие практики на сеть',
+  });
+
+  document.getElementById('alertCount').textContent = `🔔 ${alerts.filter(a=>a.level!=='ok').length} активных рисков`;
+
+  const icons = {critical:'🔴',warning:'🟡',ok:'🟢'};
+  const classes = {critical:'alert-red',warning:'alert-yellow',ok:'alert-green'};
+  document.getElementById('alertsGrid').innerHTML = alerts.map(a=>`
+    <div class="alert ${classes[a.level]}">
+      <span style="font-size:20px;flex-shrink:0">${icons[a.level]}</span>
+      <div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">${a.title}</div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:8px">${a.msg}</div>
+        <div style="font-size:11px;color:var(--muted);font-style:italic">→ ${a.action}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══ AUTO KPI ═══
+function renderAutoKPI(){
+  const totalSTO    = autoData.reduce((s,r)=>s+r[1],0);
+  const totalDTP_   = autoData.reduce((s,r)=>s+r[2],0);
+  const totalRepair = autoData.reduce((s,r)=>s+r[3],0);
+  const totalDown   = autoData.reduce((s,r)=>s+r[5],0);
+  const totalWork   = autoData.reduce((s,r)=>s+r[6],0);
+  const total       = autoData.reduce((s,r)=>s+r[0],0);
+
+  const items = [
+    {label:'На номерах',   val:fmt(total),             color:'#94a3b8', icon:'🚘'},
+    {label:'В работе',     val:fmt(Math.round(totalWork)),  color:'#10b981', icon:'🟢'},
+    {label:'В ремонте',    val:fmt(Math.round(totalRepair)),color:'#f59e0b', icon:'🔧'},
+    {label:'СТО',          val:fmt(Math.round(totalSTO)),   color:'#3b82f6', icon:'🔵'},
+    {label:'ДТП (статус)', val:fmt(Math.round(totalDTP_)),  color:'#ef4444', icon:'🔴'},
+    {label:'Простой',      val:fmt(Math.round(totalDown)),  color:'#6366f1', icon:'⏸'},
+  ];
+
+  document.getElementById('autoKpiRow').innerHTML = items.map(it=>`
+    <div class="card-sm" style="padding:16px">
+      <div style="font-size:24px;margin-bottom:8px">${it.icon}</div>
+      <div style="font-size:20px;font-weight:800;color:${it.color}">${it.val}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">${it.label}</div>
+    </div>
+  `).join('');
+}
+
+// ═══ DTP STATS ═══
+function renderDTPStats(){
+  const totalAll   = dtpTotal.reduce((a,b)=>a+b,0);
+  const totalFault2= dtpFault.reduce((a,b)=>a+b,0);
+  const totalDmg   = damage.reduce((a,b)=>a+b,0);
+  const faultPct   = +(totalFault2/totalAll*100).toFixed(0);
+
+  document.getElementById('dtpStats').innerHTML = [
+    {label:'ДТП всего',   val:totalAll,   color:'#94a3b8'},
+    {label:'По нашей вине',val:totalFault2,color:'#ef4444'},
+    {label:'% вина',       val:faultPct+'%',color:'#f59e0b'},
+    {label:'Повреждений',  val:totalDmg,   color:'#6366f1'},
+  ].map(d=>`
+    <div class="card-sm" style="padding:10px;text-align:center">
+      <div style="font-size:18px;font-weight:800;color:${d.color}">${d.val}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${d.label}</div>
+    </div>
+  `).join('');
+}
+
+// ═══ CHARTS ═══
+const chartDefaults = {
+  responsive:true,
+  maintainAspectRatio:false,
+  plugins:{
+    legend:{labels:{color:'#64748b',boxWidth:10,font:{size:11}}},
+    tooltip:{backgroundColor:'#1e293b',titleColor:'#f1f5f9',bodyColor:'#94a3b8',borderColor:'#334155',borderWidth:1}
+  }
+};
+
+function makeScale(label=false){
+  return {
+    ticks:{color:'#475569',font:{size:10}},
+    grid:{color:'rgba(31,45,69,.6)'},
+  };
+}
+
+function buildKassaChart(){
+  new Chart(document.getElementById('kassaChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels: BRANCHES.map(b=>b.name),
+      datasets:[
+        {label:'Факт (тыс. грн)',data:kassaFact.map(v=>Math.round(v/1000)),
+         backgroundColor:kassaPct.map(v=>pctColor(v)+'99'),
+         borderColor:kassaPct.map(v=>pctColor(v)),borderWidth:1,borderRadius:6},
+        {label:'План',data:kassaPlan.map(v=>Math.round(v/1000)),
+         backgroundColor:'transparent',borderColor:'#475569',borderWidth:1.5,borderDash:[4,3],
+         type:'line',pointRadius:0},
+      ]
+    },
+    options:{...chartDefaults,
+      scales:{
+        x:{ticks:{color:'#475569',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#475569',font:{size:10},callback:v=>v+'k'},grid:{color:'rgba(31,45,69,.6)'}},
       }
-    });
+    }
   });
 }
 
-function sortTable(key) {
-  if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
-  tableData.sort((a,b) => {
-    const av = key==='name' ? a.name : a[key];
-    const bv = key==='name' ? b.name : b[key];
-    return typeof av === 'string' ? av.localeCompare(bv)*sortDir : (av-bv)*sortDir;
+function buildBrendChart(){
+  new Chart(document.getElementById('brendChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:BRANCHES.map(b=>b.name),
+      datasets:[{
+        label:'% от плана',
+        data:brendPct,
+        backgroundColor:brendPct.map(v=>pctColor(v,100,85)+'cc'),
+        borderColor:brendPct.map(v=>pctColor(v,100,85)),
+        borderWidth:1,borderRadius:6,
+      }]
+    },
+    options:{...chartDefaults,
+      plugins:{...chartDefaults.plugins,
+        annotation:{annotations:{line100:{type:'line',yMin:100,yMax:100,borderColor:'#10b981',borderWidth:1,borderDash:[4,3]}}}
+      },
+      scales:{
+        x:{ticks:{color:'#475569',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#475569',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(31,45,69,.6)'},min:0,max:120},
+      }
+    }
   });
-  renderTable(tableData);
 }
 
-function filterTable(q) {
-  const filtered = branchStats.filter(b => b.name.toLowerCase().includes(q.toLowerCase()));
-  renderTable(filtered);
+function buildHiringChart(){
+  new Chart(document.getElementById('hiringChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:BRANCHES.map(b=>b.name),
+      datasets:[
+        {label:'Новые',data:newDrivers,backgroundColor:'#10b98199',borderColor:'#10b981',borderWidth:1,borderRadius:4},
+        {label:'Уволены',data:firedDrivers.map(v=>-v),backgroundColor:'#ef444499',borderColor:'#ef4444',borderWidth:1,borderRadius:4},
+      ]
+    },
+    options:{...chartDefaults,
+      scales:{
+        x:{ticks:{color:'#475569',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(31,45,69,.6)'}},
+      }
+    }
+  });
 }
 
-// ─── TOP DRIVERS ─────────────────────────────────────────────────────────────
-
-function renderTopDrivers() {
-  document.getElementById('topDriversList').innerHTML = topDrivers.map((d,i) => `
-    <div class="flex items-center gap-3">
-      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-           style="background:${i<3?'#f59e0b':'#334155'};color:${i<3?'#000':'#94a3b8'}">${i+1}</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-medium text-white truncate">${d.name}</div>
-        <div class="text-xs text-slate-500">${d.branch} · ${d.trips} поездок</div>
-      </div>
-      <div class="text-right flex-shrink-0">
-        <div class="text-sm font-semibold" style="color:#f59e0b">${d.rating}★</div>
-        <div class="text-xs text-slate-500">${d.revenue} тыс.₽</div>
-      </div>
-    </div>
-  `).join('');
+function buildAutoStackChart(){
+  new Chart(document.getElementById('autoStackChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:BRANCHES.map(b=>b.name),
+      datasets:[
+        {label:'В работе',  data:autoData.map(r=>Math.round(r[6])),backgroundColor:'#10b98199',borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}},
+        {label:'Ремонт',    data:autoData.map(r=>Math.round(r[3])),backgroundColor:'#f59e0b99'},
+        {label:'СТО',       data:autoData.map(r=>Math.round(r[1])),backgroundColor:'#3b82f699'},
+        {label:'ДТП статус',data:autoData.map(r=>Math.round(r[2])),backgroundColor:'#ef444499'},
+        {label:'Простой',   data:autoData.map(r=>Math.round(r[5])),backgroundColor:'#6366f199',borderRadius:{topLeft:4,topRight:4,bottomLeft:0,bottomRight:0}},
+      ]
+    },
+    options:{...chartDefaults,
+      scales:{
+        x:{stacked:true,ticks:{color:'#475569',font:{size:10}},grid:{display:false}},
+        y:{stacked:true,ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(31,45,69,.6)'}},
+      }
+    }
+  });
 }
 
-// ─── ALERTS ──────────────────────────────────────────────────────────────────
-
-function renderAlerts() {
-  const bg = { warn:'#78350f', err:'#4c0519', info:'#0c4a6e', ok:'#064e3b' };
-  document.getElementById('alertsList').innerHTML = alerts.map(a => `
-    <div class="flex items-start gap-2 p-2.5 rounded-lg text-sm" style="background:${bg[a.type]}22;border:1px solid ${bg[a.type]}55">
-      <span class="mt-0.5">${a.icon}</span>
-      <div class="flex-1">
-        <div class="text-slate-200">${a.text}</div>
-        <div class="text-slate-500 text-xs mt-0.5">${a.time}</div>
-      </div>
-    </div>
-  `).join('');
+function buildDTPChart(){
+  new Chart(document.getElementById('dtpChart').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:BRANCHES.map(b=>b.name),
+      datasets:[{
+        data:dtpTotal,
+        backgroundColor:['#6366f1','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'],
+        borderWidth:2,borderColor:'#111827',hoverOffset:6,
+      }]
+    },
+    options:{...chartDefaults,cutout:'65%',
+      plugins:{...chartDefaults.plugins,legend:{...chartDefaults.plugins.legend,position:'right'}}
+    }
+  });
 }
 
-// ─── REFRESH ─────────────────────────────────────────────────────────────────
-
-function refreshData() {
-  const btn = document.querySelector('button[onclick="refreshData()"]');
-  btn.innerHTML = '<span class="animate-spin inline-block">↻</span> Загрузка…';
-  setTimeout(() => {
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Обновить`;
-    document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ru');
-  }, 800);
+// Dynamics (simulated monthly trend)
+function simTrend(base, weeks=12, growth=0.02, noise=0.05){
+  return Array.from({length:weeks},(_,i)=>+(base*(1+growth*i/weeks)*(1+(Math.random()-.5)*noise)).toFixed(1));
 }
 
-function exportCSV() {
-  const header = 'Филиал,Выручка (тыс.руб.),Поездки,Водителей,Загрузка (%),Рейтинг,Ср. чек (руб.)';
-  const rows = branchStats.map(b =>
-    `${b.name},${b.rev},${b.trips},${b.drivers},${b.utilization},${b.rating},${b.avgTrip}`
-  );
-  const csv = [header, ...rows].join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
-  a.download = 'taxi_branches.csv';
-  a.click();
+function buildDynCharts(){
+  const weeks = Array.from({length:12},(_,i)=>`W${i+1}`);
+
+  // Кassa %
+  new Chart(document.getElementById('dynKassaChart').getContext('2d'),{
+    type:'line',
+    data:{
+      labels:weeks,
+      datasets:[
+        {label:'Факт %', data:simTrend(92,12,0.02,0.04),
+         borderColor:'#10b981',backgroundColor:'#10b98115',fill:true,tension:.4,pointRadius:3,borderWidth:2},
+        {label:'Цель 100%', data:Array(12).fill(100),
+         borderColor:'#475569',borderDash:[5,4],borderWidth:1.5,pointRadius:0},
+      ]
+    },
+    options:{...chartDefaults,scales:{x:makeScale(),y:{...makeScale(),ticks:{...makeScale().ticks,callback:v=>v+'%'},min:80,max:115}}}
+  });
+
+  // NET drivers
+  new Chart(document.getElementById('dynDriverChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:weeks,
+      datasets:[
+        {label:'Новые',  data:Array.from({length:12},()=>Math.round(10+Math.random()*15)),backgroundColor:'#10b98188',borderRadius:4},
+        {label:'Уволены',data:Array.from({length:12},()=>-Math.round(8+Math.random()*12)),backgroundColor:'#ef444488',borderRadius:4},
+      ]
+    },
+    options:{...chartDefaults,scales:{x:{...makeScale(),stacked:true},y:{...makeScale(),stacked:true}}}
+  });
+
+  // Utilization
+  new Chart(document.getElementById('dynUtilChart').getContext('2d'),{
+    type:'line',
+    data:{
+      labels:weeks,
+      datasets:BRANCHES.map((b,i)=>({
+        label:b.name,
+        data:simTrend(utilization[i],12,0.005,0.04),
+        borderColor:['#6366f1','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'][i],
+        tension:.4,pointRadius:2,borderWidth:1.5,
+      }))
+    },
+    options:{...chartDefaults,scales:{x:makeScale(),y:{...makeScale(),ticks:{...makeScale().ticks,callback:v=>v+'%'}}}}
+  });
+
+  // Brend %
+  new Chart(document.getElementById('dynBrendChart').getContext('2d'),{
+    type:'line',
+    data:{
+      labels:weeks,
+      datasets:[
+        {label:'Бренд %',data:simTrend(77,12,-0.01,0.06),
+         borderColor:'#f59e0b',backgroundColor:'#f59e0b15',fill:true,tension:.4,pointRadius:3,borderWidth:2},
+        {label:'Цель 100%',data:Array(12).fill(100),
+         borderColor:'#475569',borderDash:[5,4],borderWidth:1.5,pointRadius:0},
+      ]
+    },
+    options:{...chartDefaults,scales:{x:makeScale(),y:{...makeScale(),ticks:{...makeScale().ticks,callback:v=>v+'%'}}}}
+  });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-
-function init() {
-  renderKPI();
-  renderTripTabs();
-  buildRevenueChart();
-  buildDriverStatusChart();
-  buildTripsChart();
-  buildRadarChart();
-  renderTable(tableData);
-  renderTopDrivers();
-  renderAlerts();
-  document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ru');
+// ═══ NAV SCROLL ═══
+function scrollTo(id){
+  document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    l.classList.toggle('active', l.getAttribute('onclick').includes(id));
+  });
 }
 
-init();
+// Intersection observer for nav
+const sections = ['ceo','ranking','hiring','alerts','auto','dynamics'];
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('.nav-link').forEach(l=>{
+        l.classList.toggle('active', l.getAttribute('onclick').includes(e.target.id));
+      });
+    }
+  });
+},{threshold:.3,rootMargin:'-60px 0px 0px 0px'});
+sections.forEach(id=>{ const el=document.getElementById(id); if(el) observer.observe(el); });
+
+function applyFilters(){
+  // In a real app — would filter all data. Here just a placeholder.
+}
+
+// ═══ INIT ═══
+renderKPI();
+renderBranchPills();
+renderRanking();
+renderFunnel();
+renderNetDrivers();
+renderAlerts();
+renderAutoKPI();
+renderDTPStats();
+buildKassaChart();
+buildBrendChart();
+buildHiringChart();
+buildAutoStackChart();
+buildDTPChart();
+buildDynCharts();
 </script>
 </body>
 </html>
