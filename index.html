@@ -16,13 +16,32 @@
   --red:#ef4444;--red-bg:#2d0a0a;--red-border:#7f1d1d;
   --blue:#3b82f6;--blue-bg:#0d1f3c;--accent:#6366f1;
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
+/* LIGHT THEME OVERRIDES */
+body.light{
+  --bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;--border:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--muted2:#475569;
+  --green-bg:#d1fae5;--green-border:#6ee7b7;
+  --yellow-bg:#fef3c7;--yellow-border:#fcd34d;
+  --red-bg:#fee2e2;--red-border:#fca5a5;
+  --blue-bg:#dbeafe;
+}
+body.light .glass{background:rgba(255,255,255,0.9)}
+body.light .card{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+body.light select,body.light input[type=text]{background:#fff;color:#0f172a}
+body.light thead th{background:rgba(241,245,249,.95);color:var(--muted)}
+body.light #modalPanel{background:#f8fafc}
+body.light .alert-red{background:rgba(254,226,226,.6)}
+body.light .alert-yellow{background:rgba(254,243,199,.6)}
+body.light .alert-green{background:rgba(209,250,229,.6)}
+body.light tbody tr:hover td{background:rgba(226,232,240,.5)}
 
-.glass{background:rgba(17,24,39,0.85);backdrop-filter:blur(12px);border:1px solid var(--border)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:transform .15s,box-shadow .15s}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
+
+.glass{background:rgba(17,24,39,0.85);backdrop-filter:blur(12px);border:1px solid var(--border);transition:background .25s}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:transform .15s,box-shadow .15s,background .25s}
 .card:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.card-sm{background:var(--surface2);border:1px solid var(--border);border-radius:12px}
+.card-sm{background:var(--surface2);border:1px solid var(--border);border-radius:12px;transition:background .25s}
 .card-click{cursor:pointer}
 .card-click:hover{border-color:#6366f155;box-shadow:0 0 0 1px #6366f133}
 
@@ -70,12 +89,28 @@ td{padding:13px 16px;border-bottom:1px solid rgba(31,45,69,.5);vertical-align:mi
 .nav-link{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted2);transition:all .15s;cursor:pointer;white-space:nowrap}
 .nav-link:hover,.nav-link.active{background:rgba(99,102,241,.15);color:#818cf8}
 
-select,input[type=date]{
+select,input[type=text]{
   background:var(--surface2);border:1px solid var(--border);color:var(--text);
   border-radius:10px;padding:7px 12px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;cursor:pointer
 }
-select:focus{border-color:var(--accent)}
+select:focus,input[type=text]:focus{border-color:var(--accent)}
 select option{background:var(--surface)}
+
+/* Icon button */
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted2);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* Sheets button */
+.sheets-btn{
+  padding:7px 12px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted2);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;flex-shrink:0;font-family:inherit
+}
+.sheets-btn:hover{border-color:#10b981;color:#10b981}
 
 /* ─── MODAL OVERLAY ─── */
 #modalOverlay{
@@ -83,7 +118,6 @@ select option{background:var(--surface)}
   backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;
 }
 #modalOverlay.open{opacity:1;pointer-events:all}
-
 #modalPanel{
   position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);z-index:101;
   background:#0f172a;border-left:1px solid var(--border);
@@ -91,6 +125,20 @@ select option{background:var(--surface)}
   overflow-y:auto;display:flex;flex-direction:column;
 }
 #modalPanel.open{transform:translateX(0)}
+
+/* ─── SHEETS MODAL ─── */
+#sheetsOverlay{
+  position:fixed;inset:0;z-index:200;background:rgba(5,8,16,.7);
+  backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .25s;
+  display:flex;align-items:center;justify-content:center;
+}
+#sheetsOverlay.open{opacity:1;pointer-events:all}
+#sheetsPanel{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:32px;width:min(480px,95vw);transform:translateY(20px);transition:transform .3s;
+  box-shadow:0 32px 80px rgba(0,0,0,.5)
+}
+#sheetsOverlay.open #sheetsPanel{transform:translateY(0)}
 
 /* Scroll */
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -100,18 +148,64 @@ select option{background:var(--surface)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 .blink{animation:blink 2s infinite}
 
+/* ─── HEATMAP ─── */
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:3px}
+.heatmap-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:6px 4px;text-align:center}
+.heatmap-table th:first-child{text-align:left;padding-left:8px;min-width:100px}
+.heatmap-cell{border-radius:8px;padding:10px 6px;text-align:center;font-weight:700;font-size:13px;cursor:default;transition:opacity .2s}
+.heatmap-cell:hover{opacity:.85}
+.hm-green{background:rgba(16,185,129,.25);color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+.hm-yellow{background:rgba(245,158,11,.25);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.hm-red{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+
+/* ─── PRINT ─── */
+@media print{
+  nav,#filterPanel,#sheetsOverlay,#modalOverlay,#modalPanel,
+  .period-btn,.icon-btn,.sheets-btn,.rank-sort{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .card,.card-sm,.kpi,.alert{background:#fff!important;box-shadow:none!important;border:1px solid #ddd!important}
+  #mainContent{padding:0!important}
+  section{page-break-after:always}
+  .glass{background:#fff!important;border-bottom:1px solid #ddd!important}
+  canvas{max-width:100%!important}
+  th{background:#f5f5f5!important;color:#333!important}
+  td{border-color:#ddd!important}
+  :root{--bg:#fff;--surface:#fff;--surface2:#f5f5f5;--text:#000;--muted:#555;--muted2:#333;--border:#ddd}
+}
+
+/* ─── MOBILE ─── */
 @media(max-width:900px){
   .hide-sm{display:none}
   #summaryRow{grid-template-columns:1fr!important}
   #dynGrid{grid-template-columns:1fr!important}
+}
+@media(max-width:640px){
+  #navLinks{display:none!important}
+  .nav-controls{flex-wrap:wrap;gap:6px!important}
+  #branchSel{width:130px!important}
+  #summaryRow{grid-template-columns:1fr!important}
+  #dynGrid{grid-template-columns:1fr!important}
+  #kpiRow{grid-template-columns:1fr 1fr!important}
+  #alertsGrid{grid-template-columns:1fr!important}
+  #autoKpiRow{grid-template-columns:repeat(3,1fr)!important}
+  #hiringGrid{grid-template-columns:1fr!important}
+  .hiring-inner{grid-template-columns:1fr!important}
+  canvas{max-height:180px}
+  .kpi{padding:16px}
+  .kpi .val,
+  .kpi [style*="font-size:30px"]{font-size:22px!important}
+  #heatmapTable .hm-hide-mobile{display:none}
+  #mainContent{padding:12px}
+  #sheetsPanel{padding:20px}
+  .period-btn{padding:5px 10px;font-size:12px}
 }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav class="glass sticky top-0 z-50 border-b border-[#1f2d45]">
-  <div style="max-width:1600px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px;height:60px">
+<nav class="glass sticky top-0 z-50 border-b border-[#1f2d45]" id="mainNav">
+  <div style="max-width:1600px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:10px;height:60px;flex-wrap:nowrap" class="nav-controls">
     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
       <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🚕</div>
       <div>
@@ -127,7 +221,22 @@ select option{background:var(--surface)}
       <div class="nav-link" onclick="scrollTo('alerts')">Риски</div>
       <div class="nav-link" onclick="scrollTo('auto')">Автопарк</div>
       <div class="nav-link" onclick="scrollTo('dynamics')">Динамика</div>
+      <div class="nav-link" onclick="scrollTo('heatmap')">Тепловая карта</div>
     </div>
+
+    <!-- Connection status -->
+    <div id="sheetsStatus" style="font-size:11px;color:var(--muted);flex-shrink:0;display:none"></div>
+
+    <!-- Google Sheets button -->
+    <button class="sheets-btn" onclick="openSheetsModal()" title="Подключить Google Sheets">
+      🔗 Google Sheets
+    </button>
+
+    <!-- Print/PDF button -->
+    <button class="icon-btn" onclick="window.print()" title="Печать / PDF">🖨️</button>
+
+    <!-- Theme toggle -->
+    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Переключить тему">🌙</button>
 
     <!-- PERIOD TOGGLE -->
     <div style="display:flex;gap:4px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px">
@@ -136,7 +245,7 @@ select option{background:var(--surface)}
     </div>
 
     <!-- BRANCH FILTER -->
-    <select id="branchSel" onchange="setBranch(this.value)" style="width:160px;flex-shrink:0">
+    <select id="branchSel" onchange="setBranch(this.value)" style="width:150px;flex-shrink:0">
       <option value="all">Все филиалы</option>
       <option value="0">Днепр-1</option>
       <option value="1">Запорожье</option>
@@ -147,7 +256,7 @@ select option{background:var(--surface)}
       <option value="6">Львов</option>
     </select>
 
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:12px;color:var(--muted2);flex-shrink:0">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:12px;color:var(--muted2);flex-shrink:0;white-space:nowrap">
       📅 01.05.2026
     </div>
   </div>
@@ -192,7 +301,7 @@ select option{background:var(--surface)}
 
 <!-- ══════════ RANKING ══════════ -->
 <section id="ranking" style="margin-top:40px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Рейтинг филиалов</div>
       <div style="color:var(--muted);font-size:13px;margin-top:2px">Нажмите на строку для детального просмотра</div>
@@ -226,7 +335,7 @@ select option{background:var(--surface)}
     <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Найм водителей</div>
     <div style="color:var(--muted);font-size:13px;margin-top:2px">Воронка конверсии · NET Drivers</div>
   </div>
-  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:16px">
+  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:16px" class="hiring-inner" id="hiringGrid">
     <div class="card" style="padding:24px">
       <div style="font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px">Воронка найма</div>
       <div id="funnelViz"></div>
@@ -274,7 +383,7 @@ select option{background:var(--surface)}
 </section>
 
 <!-- ══════════ DYNAMICS ══════════ -->
-<section id="dynamics" style="margin-top:40px;margin-bottom:40px">
+<section id="dynamics" style="margin-top:40px">
   <div style="margin-bottom:20px">
     <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Динамика</div>
     <div style="color:var(--muted);font-size:13px;margin-top:2px">Тренды ключевых метрик</div>
@@ -299,6 +408,39 @@ select option{background:var(--surface)}
   </div>
 </section>
 
+<!-- ══════════ HEATMAP ══════════ -->
+<section id="heatmap" style="margin-top:40px;margin-bottom:40px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Тепловая карта</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:2px">Сравнение метрик по филиалам</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(16,185,129,.4);display:inline-block"></span>Хорошо</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(245,158,11,.4);display:inline-block"></span>Внимание</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,.4);display:inline-block"></span>Критично</span>
+    </div>
+  </div>
+  <div class="card" style="padding:20px;overflow-x:auto">
+    <table class="heatmap-table" id="heatmapTable">
+      <thead>
+        <tr>
+          <th>Филиал</th>
+          <th>Касса %</th>
+          <th>Бренд %</th>
+          <th>Загрузка %</th>
+          <th class="hm-hide-mobile">Простои %</th>
+          <th>NET водит.</th>
+          <th class="hm-hide-mobile">ДТП</th>
+          <th class="hm-hide-mobile">Новые</th>
+          <th class="hm-hide-mobile">Уволено</th>
+        </tr>
+      </thead>
+      <tbody id="heatmapBody"></tbody>
+    </table>
+  </div>
+</section>
+
 </div><!-- /main -->
 
 <!-- ══════════════════════════════════════
@@ -307,6 +449,30 @@ select option{background:var(--surface)}
 <div id="modalOverlay" onclick="closeModal()"></div>
 <div id="modalPanel">
   <div id="modalContent" style="flex:1;padding:0"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     GOOGLE SHEETS MODAL
+══════════════════════════════════════ -->
+<div id="sheetsOverlay" onclick="closeSheetsModal(event)">
+  <div id="sheetsPanel" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:800;letter-spacing:-.02em">Подключение к Google Sheets</div>
+      <button onclick="closeSheetsModal()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.6;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+      💡 Откройте доступ к таблице (<b>Файл → Доступ → Все, у кого есть ссылка, могут просматривать</b>)
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">ID таблицы или полный URL</label>
+      <input type="text" id="sheetsIdInput" value="1e4GxjiEfA20q2QpinxGLcNNKAdoZgxsONYohuzv6rNc" style="width:100%" placeholder="Вставьте ID или ссылку на таблицу"/>
+    </div>
+    <div id="sheetsStatusMsg" style="min-height:28px;font-size:13px;margin-bottom:16px;padding:8px 12px;border-radius:8px;display:none"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="connectSheets()" style="flex:1;padding:10px 20px;border-radius:10px;border:none;background:#6366f1;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Подключить</button>
+      <button onclick="useDemoData()" style="padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">Использовать демо-данные</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -326,7 +492,6 @@ const BRANCH_COLORS = ['#6366f1','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf
 
 // ── MONTH DATA ──────────────────────────────
 const M = {
-  // Авто [на номерах, СТО, ДТП, ремонт, штраф, простой, в работе]
   auto: [
     [1470,107.5,86.0, 163.5,30, 58.0,  1218.5],
     [1290,101.0,72.0, 147.0,26, 148.5, 968.5],
@@ -392,8 +557,8 @@ const D = {
 };
 
 // ══ STATE ══
-let period = 'day';  // 'day' | 'month'
-let activeBranch = 'all';  // 'all' | 0..6
+let period = 'day';
+let activeBranch = 'all';
 let rankSortKey = 'kassa';
 const charts = {};
 
@@ -410,11 +575,12 @@ function fmtK(n){return n>=1000000?(n/1000000).toFixed(2)+'M':(n/1000).toFixed(0
 function pctColor(v,hi=100,mid=90){return v>=hi?'#10b981':v>=mid?'#f59e0b':'#ef4444'}
 function pctClass(v,hi=100,mid=90){return v>=hi?'pill-green':v>=mid?'pill-yellow':'pill-red'}
 function netColor(v){return v>0?'#10b981':v<0?'#ef4444':'#64748b'}
+function getTickColor(){return document.body.classList.contains('light')?'#475569':'#64748b'}
 
 function branchStatus(i){
   const d=data();
-  const kp=d.kassaPct instanceof Array?d.kassaPct[i]:d.kassaPct[i];
-  const bp=d.brendPct instanceof Array?d.brendPct[i]:d.brendPct[i];
+  const kp=d.kassaPct[i];
+  const bp=d.brendPct[i];
   const net=(d.newDrivers[i]||0)-(d.firedDrivers[i]||0);
   if(kp<90||bp<70||net<-10)return'critical';
   if(kp<95||bp<85||net<0) return'warning';
@@ -430,8 +596,23 @@ const chartBase = {
     tooltip:{backgroundColor:'#1e293b',titleColor:'#f1f5f9',bodyColor:'#94a3b8',borderColor:'#334155',borderWidth:1}
   }
 };
-function scaleX(show=true){return{display:show,ticks:{color:'#475569',font:{size:10}},grid:{display:false}}}
-function scaleY(cb){return{ticks:{color:'#475569',font:{size:10},callback:cb||undefined},grid:{color:'rgba(31,45,69,.5)'}}}
+function scaleX(show=true){return{display:show,ticks:{color:getTickColor(),font:{size:10}},grid:{display:false}}}
+function scaleY(cb){return{ticks:{color:getTickColor(),font:{size:10},callback:cb||undefined},grid:{color:'rgba(31,45,69,.5)'}}}
+
+// ══ THEME ══
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('driveme_theme',isLight?'light':'dark');
+  rebuildAll();
+}
+function initTheme(){
+  const saved=localStorage.getItem('driveme_theme');
+  if(saved==='light'){
+    document.body.classList.add('light');
+    document.getElementById('themeBtn').textContent='☀️';
+  }
+}
 
 // ══ PERIOD SWITCH ══
 function setPeriod(p){
@@ -470,6 +651,8 @@ function rebuildAll(){
   renderAlerts();
   renderAutoKPI();
   renderDTPStats();
+  buildDynCharts();
+  renderHeatmap();
 }
 
 function rebuildChart(id, fn){destroyChart(id);fn();}
@@ -481,7 +664,6 @@ function renderKPI(){
   const kassaF= idxs.reduce((s,i)=>s+d.kassaFact[i],0);
   const kassaP= idxs.reduce((s,i)=>s+d.kassaPlan[i],0);
   const kPct  = +(kassaF/kassaP*100).toFixed(1);
-  const brendP_arr = d.brendPct instanceof Function ? d.brendPct : d.brendPct;
   const bPctAvg  = +(idxs.reduce((s,i)=>s+(d.brendPct[i]||0),0)/idxs.length).toFixed(1);
   const newD  = idxs.reduce((s,i)=>s+(d.newDrivers[i]||0),0);
   const fireD = idxs.reduce((s,i)=>s+(d.firedDrivers[i]||0),0);
@@ -601,9 +783,6 @@ function buildBrendChart(){
     }]},
     options:{...chartBase,
       scales:{x:scaleX(),y:{...scaleY(v=>v+'%'),min:0,max:130}},
-      plugins:{...chartBase.plugins,
-        annotation:{annotations:{l100:{type:'line',yMin:100,yMax:100,borderColor:'#10b981',borderWidth:1.5,borderDash:[5,4]}}}
-      }
     }
   });
 }
@@ -830,7 +1009,6 @@ function renderAlerts(){
       action:'🟡 Провести инструктаж водителей'});
   });
 
-  // Лучший
   const best=idxs.reduce((bi,i)=>d.kassaPct[i]>d.kassaPct[bi]?i:bi,idxs[0]);
   if(d.kassaPct[best]>=100) alerts.unshift({lvl:'ok',
     title:`${BRANCHES[best].flag} ${BRANCHES[best].name} — Перевыполнение плана`,
@@ -898,7 +1076,6 @@ function buildDynCharts(){
     return Array.from({length:n},(_,i)=>+(base*(1+g*i/n)*(1+(Math.random()-.5)*noise)).toFixed(1));
   }
 
-  // Kassa %
   destroyChart('dynKassa');
   const avgKP=+(idxs.reduce((s,i)=>s+d.kassaPct[i],0)/idxs.length).toFixed(1);
   charts.dynKassa=new Chart(document.getElementById('dynKassaChart').getContext('2d'),{
@@ -910,7 +1087,6 @@ function buildDynCharts(){
     options:{...chartBase,scales:{x:scaleX(),y:{...scaleY(v=>v+'%'),min:75,max:115}}}
   });
 
-  // NET drivers
   destroyChart('dynDriver');
   charts.dynDriver=new Chart(document.getElementById('dynDriverChart').getContext('2d'),{
     type:'bar',
@@ -921,7 +1097,6 @@ function buildDynCharts(){
     options:{...chartBase,scales:{x:{...scaleX(),stacked:true},y:{...scaleY(),stacked:true}}}
   });
 
-  // Utilization
   destroyChart('dynUtil');
   charts.dynUtil=new Chart(document.getElementById('dynUtilChart').getContext('2d'),{
     type:'line',
@@ -933,7 +1108,6 @@ function buildDynCharts(){
     options:{...chartBase,scales:{x:scaleX(),y:{...scaleY(v=>v+'%'),min:55}}}
   });
 
-  // Brend %
   destroyChart('dynBrend');
   const avgBP=+(idxs.reduce((s,i)=>s+(d.brendPct[i]||0),0)/idxs.length).toFixed(1);
   charts.dynBrend=new Chart(document.getElementById('dynBrendChart').getContext('2d'),{
@@ -944,6 +1118,57 @@ function buildDynCharts(){
     ]},
     options:{...chartBase,scales:{x:scaleX(),y:{...scaleY(v=>v+'%'),min:40}}}
   });
+}
+
+// ═══════════════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════════════
+function hmClass(val, metric){
+  // metric: 'kassa','brend','util','downtime','net','dtp','new','fired'
+  switch(metric){
+    case 'kassa':    return val>=100?'hm-green':val>=90?'hm-yellow':'hm-red';
+    case 'brend':    return val>=100?'hm-green':val>=85?'hm-yellow':'hm-red';
+    case 'util':     return val>=85?'hm-green':val>=75?'hm-yellow':'hm-red';
+    case 'downtime': return val<=5?'hm-green':val<=8?'hm-yellow':'hm-red';
+    case 'net':      return val>0?'hm-green':val===0?'hm-yellow':'hm-red';
+    case 'dtp':      return val<=5?'hm-green':val<=10?'hm-yellow':'hm-red';
+    case 'new':      return val>=20?'hm-green':val>=10?'hm-yellow':'hm-red';
+    case 'fired':    return val<=15?'hm-green':val<=25?'hm-yellow':'hm-red';
+    default:         return 'hm-yellow';
+  }
+}
+
+function renderHeatmap(){
+  const d=data();
+  const idxs=filteredIdxs();
+  let rows='';
+  idxs.forEach(i=>{
+    const b=BRANCHES[i];
+    const kassa=+(d.kassaPct[i]).toFixed(1);
+    const brend=+(d.brendPct[i]).toFixed(1);
+    const util=+(d.utilization[i]).toFixed(1);
+    const down=+(d.downtime[i]).toFixed(1);
+    const net=(d.newDrivers[i]||0)-(d.firedDrivers[i]||0);
+    const dtp=d.dtpTotal[i]||0;
+    const newD=d.newDrivers[i]||0;
+    const fired=d.firedDrivers[i]||0;
+
+    const cell=(val,metric,display)=>`<td><div class="heatmap-cell ${hmClass(val,metric)}">${display!==undefined?display:val}</div></td>`;
+    const cellHide=(val,metric,display)=>`<td class="hm-hide-mobile"><div class="heatmap-cell ${hmClass(val,metric)}">${display!==undefined?display:val}</div></td>`;
+
+    rows+=`<tr>
+      <td style="padding:4px 8px;font-size:12px;font-weight:600;white-space:nowrap">${b.flag} ${b.name}</td>
+      ${cell(kassa,'kassa',kassa+'%')}
+      ${cell(brend,'brend',brend+'%')}
+      ${cell(util,'util',util+'%')}
+      ${cellHide(down,'downtime',down+'%')}
+      ${cell(net,'net',(net>0?'+':'')+net)}
+      ${cellHide(dtp,'dtp',dtp)}
+      ${cellHide(newD,'new','+'+newD)}
+      ${cellHide(fired,'fired',fired)}
+    </tr>`;
+  });
+  document.getElementById('heatmapBody').innerHTML=rows;
 }
 
 // ═══════════════════════════════════════════
@@ -964,10 +1189,8 @@ function openModal(idx){
   const sLabel=status==='excellent'?'🟢 Отлично':status==='warning'?'🟡 Требует внимания':'🔴 Критично';
   const autoRow=d.auto[idx];
   const autoTotal=autoRow[0];
-  const pctWork=+(autoRow[6]/autoTotal*100).toFixed(1);
 
   document.getElementById('modalContent').innerHTML=`
-    <!-- Modal Header -->
     <div style="background:linear-gradient(135deg,${BRANCH_COLORS[idx]}22,transparent);border-bottom:1px solid var(--border);padding:20px 24px;position:sticky;top:0;background-color:#0f172a;z-index:1">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:12px">
@@ -984,7 +1207,6 @@ function openModal(idx){
       </div>
     </div>
 
-    <!-- KPI row -->
     <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;border-bottom:1px solid var(--border)">
       ${[
         {label:'Касса',    val:kp+'%',       color:pctColor(kp),     sub:fmtK(d.kassaFact[idx])+' грн'},
@@ -998,7 +1220,6 @@ function openModal(idx){
         </div>`).join('')}
     </div>
 
-    <!-- Auto breakdown -->
     <div style="padding:20px 24px;border-bottom:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Автопарк · ${fmt(autoTotal)} авто</div>
       ${[
@@ -1016,7 +1237,6 @@ function openModal(idx){
         </div>`).join('')}
     </div>
 
-    <!-- Касса & Бренд detail -->
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:12px">Касса</div>
@@ -1044,7 +1264,6 @@ function openModal(idx){
       </div>
     </div>
 
-    <!-- Hiring funnel & DTP -->
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:12px">Найм водителей</div>
@@ -1073,7 +1292,6 @@ function openModal(idx){
       </div>
     </div>
 
-    <!-- Mini charts -->
     <div style="padding:20px 24px">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:16px">Динамика (тренд)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1087,7 +1305,6 @@ function openModal(idx){
         </div>
       </div>
 
-      <!-- Action block -->
       <div style="margin-top:20px;padding:16px;border-radius:12px;background:${
         status==='critical'?'rgba(127,29,29,.3)':
         status==='warning'?'rgba(120,53,15,.3)':'rgba(6,78,59,.3)'};border:1px solid ${
@@ -1108,7 +1325,6 @@ function openModal(idx){
     </div>
   `;
 
-  // Mini charts in modal
   if(modalChart1){modalChart1.destroy();modalChart1=null;}
   if(modalChart2){modalChart2.destroy();modalChart2=null;}
   setTimeout(()=>{
@@ -1119,11 +1335,11 @@ function openModal(idx){
     if(el1) modalChart1=new Chart(el1.getContext('2d'),{type:'line',
       data:{labels:Array.from({length:10},(_,i)=>`Н${i+1}`),
         datasets:[{data:sim(kp,10,.05),borderColor:pctColor(kp),backgroundColor:pctColor(kp)+'20',fill:true,tension:.4,pointRadius:2,borderWidth:2}]},
-      options:{...mini,scales:{x:{display:false},y:{...scaleY(v=>v+'%'),ticks:{...scaleY().ticks,font:{size:9}}}}}});
+      options:{...mini,scales:{x:{display:false},y:{...scaleY(v=>v+'%'),ticks:{color:getTickColor(),font:{size:9}}}}}});
     if(el2) modalChart2=new Chart(el2.getContext('2d'),{type:'line',
       data:{labels:Array.from({length:10},(_,i)=>`Н${i+1}`),
         datasets:[{data:sim(util,10,.04),borderColor:pctColor(util,85,75),backgroundColor:pctColor(util,85,75)+'20',fill:true,tension:.4,pointRadius:2,borderWidth:2}]},
-      options:{...mini,scales:{x:{display:false},y:{...scaleY(v=>v+'%'),ticks:{...scaleY().ticks,font:{size:9}}}}}});
+      options:{...mini,scales:{x:{display:false},y:{...scaleY(v=>v+'%'),ticks:{color:getTickColor(),font:{size:9}}}}}});
   },50);
 
   document.getElementById('modalOverlay').classList.add('open');
@@ -1138,7 +1354,192 @@ function closeModal(){
   if(modalChart1){modalChart1.destroy();modalChart1=null;}
   if(modalChart2){modalChart2.destroy();modalChart2=null;}
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeModal();
+    closeSheetsModal();
+  }
+});
+
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS
+// ═══════════════════════════════════════════
+function openSheetsModal(){
+  document.getElementById('sheetsOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  setSheetsStatus('','');
+}
+
+function closeSheetsModal(e){
+  if(e && e.target!==document.getElementById('sheetsOverlay')) return;
+  document.getElementById('sheetsOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function setSheetsStatus(msg, type){
+  const el=document.getElementById('sheetsStatusMsg');
+  if(!msg){el.style.display='none';return;}
+  el.style.display='block';
+  el.textContent=msg;
+  el.style.background=type==='error'?'rgba(239,68,68,.15)':type==='success'?'rgba(16,185,129,.15)':'rgba(99,102,241,.15)';
+  el.style.color=type==='error'?'#fca5a5':type==='success'?'#6ee7b7':'#a5b4fc';
+  el.style.border=`1px solid ${type==='error'?'#ef444444':type==='success'?'#10b98144':'#6366f144'}`;
+}
+
+function extractSheetId(input){
+  input=input.trim();
+  const m=input.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return m[1];
+  return input;
+}
+
+function parseNum(s){
+  if(!s) return 0;
+  s=String(s).trim().replace('%','').replace(/\s/g,'').replace(',','.');
+  if(s==='#DIV/0!'||s===''||s==='#N/A') return 0;
+  const n=parseFloat(s);
+  return isNaN(n)?0:n;
+}
+
+function parseSheetCSV(text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  function parseRow(line){
+    const result=[];
+    let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){result.push(cur);cur='';}
+      else{cur+=c;}
+    }
+    result.push(cur);
+    return result;
+  }
+
+  const rows=lines.map(parseRow);
+
+  // dayCol: C,E,G,I,K,M,O = indices 2,4,6,8,10,12,14
+  // monthCol: D,F,H,J,L,N,P = indices 3,5,7,9,11,13,15
+  const dayCol=[2,4,6,8,10,12,14];
+  const monthCol=[3,5,7,9,11,13,15];
+
+  // We have 7 branches, so we read columns for each branch
+  // The data rows mapping (0-indexed):
+  // row[3]=Авто на номерах, row[4]=Авто СТО, row[5]=Авто ДТП
+  // row[6]=Авто ремонт, row[7]=Авто штраф, row[8]=Авто простой, row[9]=Авто в работе
+  // row[13]=% простоїв, row[14]=% завантаження
+  // row[16]=Каса за вчора, row[17]=Середня каса
+  // row[18]=Каса ФАКТ прогноз, row[19]=Каса ПЛАН
+  // row[20]=% Каса від плану
+  // row[22]=Поїздки за вчора, row[23]=Середня поїздок
+  // row[25]=Бренд ФАКТ прогноз, row[26]=Бренд ПЛАН, row[27]=% Бренд від плану
+  // row[29]=ДТП всього, row[30]=ДТП наш, row[32]=Пошкоджень
+  // row[34]=Заявки, row[36]=Співбесіди, row[38]=Нові водії, row[39]=Звільнені
+
+  function getRowVals(rowIdx, cols){
+    if(!rows[rowIdx]) return cols.map(()=>0);
+    return cols.map(c=>parseNum(rows[rowIdx][c]));
+  }
+
+  // Update D (day data) and M (month data)
+  const dCols=dayCol;
+  const mCols=monthCol;
+
+  // Auto: [номерах, СТО, ДТП, ремонт, штраф, простой, в работе]
+  const nomD=getRowVals(3,dCols), nomM=getRowVals(3,mCols);
+  const stoD=getRowVals(4,dCols), stoM=getRowVals(4,mCols);
+  const dtpStatusD=getRowVals(5,dCols), dtpStatusM=getRowVals(5,mCols);
+  const remD=getRowVals(6,dCols), remM=getRowVals(6,mCols);
+  const shtD=getRowVals(7,dCols), shtM=getRowVals(7,mCols);
+  const prostD=getRowVals(8,dCols), prostM=getRowVals(8,mCols);
+  const workD=getRowVals(9,dCols), workM=getRowVals(9,mCols);
+
+  for(let b=0;b<7;b++){
+    D.auto[b]=[nomD[b],stoD[b],dtpStatusD[b],remD[b],shtD[b],prostD[b],workD[b]];
+    M.auto[b]=[nomM[b],stoM[b],dtpStatusM[b],remM[b],shtM[b],prostM[b],workM[b]];
+  }
+
+  D.downtime=getRowVals(13,dCols);
+  M.downtime=getRowVals(13,mCols);
+  D.utilization=getRowVals(14,dCols);
+  M.utilization=getRowVals(14,mCols);
+
+  D.kassaFact=getRowVals(16,dCols);
+  D.kassaAvg=getRowVals(17,dCols);
+  M.kassaFact=getRowVals(18,mCols);
+  M.kassaPlan=getRowVals(19,mCols);
+  M.kassaPct=getRowVals(20,mCols);
+
+  const tripsD=getRowVals(22,dCols);
+  D.kassaAvg=getRowVals(17,dCols);
+  M.kassaAvg=getRowVals(17,mCols);
+
+  // Recalculate day kassaPlan from month (approx /31)
+  D.kassaPlan=M.kassaPlan.map(v=>Math.round(v/31));
+
+  M.brendFact=getRowVals(25,mCols);
+  M.brendPlan=getRowVals(26,mCols);
+  M.brendPct=getRowVals(27,mCols);
+
+  // Day brend: use trips/auto day and compare to plan
+  const tripsPerCarD=getRowVals(22,dCols);
+  const tripsPerCarM=getRowVals(23,mCols);
+  D.tripsPerCar=tripsPerCarD;
+  M.tripsPerCar=tripsPerCarM;
+
+  M.dtpTotal=getRowVals(29,mCols);
+  M.dtpFault=getRowVals(30,mCols);
+  D.dtpTotal=getRowVals(29,dCols);
+  D.dtpFault=getRowVals(30,dCols);
+
+  M.damage=getRowVals(32,mCols);
+  D.damage=getRowVals(32,dCols);
+
+  M.applications=getRowVals(34,mCols);
+  D.applications=getRowVals(34,dCols);
+  M.interviews=getRowVals(36,mCols);
+  D.interviews=getRowVals(36,dCols);
+  M.newDrivers=getRowVals(38,mCols);
+  D.newDrivers=getRowVals(38,dCols);
+  M.firedDrivers=getRowVals(39,mCols);
+  D.firedDrivers=getRowVals(39,dCols);
+}
+
+async function connectSheets(){
+  const input=document.getElementById('sheetsIdInput').value;
+  const id=extractSheetId(input);
+  if(!id){setSheetsStatus('Введите ID таблицы или ссылку','error');return;}
+  setSheetsStatus('⏳ Подключение…','info');
+  const url=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    parseSheetCSV(text);
+    rebuildAll();
+    const ts=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+    setSheetsStatus(`✅ Подключено · данные обновлены в ${ts}`,'success');
+    // Update nav status
+    const statusEl=document.getElementById('sheetsStatus');
+    statusEl.style.display='block';
+    statusEl.innerHTML=`<span style="color:#10b981">🟢 Sheets · ${ts}</span>`;
+    setTimeout(()=>{
+      document.getElementById('sheetsOverlay').classList.remove('open');
+      document.body.style.overflow='';
+    },1500);
+  }catch(err){
+    setSheetsStatus('Ошибка: убедитесь что таблица открыта для просмотра всем','error');
+  }
+}
+
+function useDemoData(){
+  setSheetsStatus('✅ Используются встроенные демо-данные','success');
+  rebuildAll();
+  setTimeout(()=>{
+    document.getElementById('sheetsOverlay').classList.remove('open');
+    document.body.style.overflow='';
+  },800);
+}
 
 // ══ NAV SCROLL ══
 function scrollTo(id){
@@ -1153,12 +1554,13 @@ const observer=new IntersectionObserver(entries=>{
     }
   });
 },{threshold:.2,rootMargin:'-60px 0px 0px 0px'});
-['ceo','ranking','hiring','alerts','auto','dynamics'].forEach(id=>{
+['ceo','ranking','hiring','alerts','auto','dynamics','heatmap'].forEach(id=>{
   const el=document.getElementById(id);if(el)observer.observe(el);
 });
 
 // ══ INIT ══
 function init(){
+  initTheme();
   renderKPI();
   renderHealthGrid();
   renderBranchPills();
@@ -1174,6 +1576,7 @@ function init(){
   buildDTPChart();
   buildHiringChart();
   buildDynCharts();
+  renderHeatmap();
 }
 init();
 </script>
