@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DriveMe — Тренинг рекрутеров</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#0f172a;font-size:15px;line-height:1.6}
+
+  .page{max-width:800px;margin:0 auto;padding:40px 24px;background:#fff}
+
+  /* Cover */
+  .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#312e81 100%);color:#fff;border-radius:20px;padding:60px 48px;margin-bottom:48px;position:relative;overflow:hidden}
+  .cover::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:rgba(99,102,241,.15)}
+  .cover::after{content:'';position:absolute;left:-40px;bottom:-40px;width:200px;height:200px;border-radius:50%;background:rgba(16,185,129,.1)}
+  .cover-tag{background:rgba(99,102,241,.3);border:1px solid rgba(99,102,241,.5);color:#a5b4fc;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:inline-block;margin-bottom:20px}
+  .cover h1{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+  .cover p{font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;max-width:480px}
+  .cover-meta{display:flex;gap:24px;flex-wrap:wrap}
+  .cover-meta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.6)}
+  .cover-meta-item span{font-weight:600;color:#fff}
+
+  /* Section header */
+  .section{margin-bottom:48px}
+  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6366f1;margin-bottom:8px}
+  .section-title{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+  .section-sub{font-size:14px;color:#64748b;margin-bottom:24px}
+  .divider{height:3px;background:linear-gradient(90deg,#6366f1,#10b981,transparent);border-radius:2px;margin-bottom:28px}
+
+  /* Cards */
+  .card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px 24px;margin-bottom:14px}
+  .card-accent{border-left:4px solid #6366f1}
+  .card-green{background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #10b981}
+  .card-yellow{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b}
+  .card-red{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+  .card p{font-size:14px;color:#475569;line-height:1.6}
+
+  /* Steps */
+  .steps{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid #f1f5f9;position:relative}
+  .step:last-child{border-bottom:none}
+  .step-num{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .step-body h4{font-size:15px;font-weight:700;margin-bottom:4px}
+  .step-body p{font-size:13px;color:#64748b}
+  .step-body .time{font-size:11px;background:#ede9fe;color:#6366f1;padding:2px 8px;border-radius:99px;font-weight:600;display:inline-block;margin-bottom:6px}
+
+  /* Script blocks */
+  .script{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:20px 24px;margin:12px 0;font-size:13px;line-height:1.7}
+  .script .role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6366f1;margin-bottom:4px}
+  .script .text{color:#f1f5f9}
+  .script .note{color:#64748b;font-style:italic;font-size:12px;margin-top:8px}
+
+  /* Objection block */
+  .objection{border-radius:14px;overflow:hidden;margin-bottom:16px;border:1px solid #e2e8f0}
+  .obj-header{background:#fef2f2;padding:14px 20px;display:flex;align-items:center;gap:10px}
+  .obj-header .icon{font-size:18px}
+  .obj-header h4{font-size:14px;font-weight:700;color:#991b1b}
+  .obj-body{padding:16px 20px;background:#fff}
+  .obj-body .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#10b981;margin-bottom:6px}
+  .obj-body p{font-size:13px;color:#334155;line-height:1.6}
+  .obj-tip{background:#f0fdf4;border-top:1px solid #bbf7d0;padding:10px 20px;font-size:12px;color:#166534;font-style:italic}
+
+  /* Checklist */
+  .checklist{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .checklist li{display:flex;align-items:flex-start;gap:10px;font-size:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0}
+  .checklist li::before{content:'✓';color:#10b981;font-weight:800;font-size:14px;flex-shrink:0;margin-top:1px}
+  .checklist li.no::before{content:'✗';color:#ef4444}
+
+  /* Agenda */
+  .agenda{display:flex;flex-direction:column;gap:0;position:relative}
+  .agenda::before{content:'';position:absolute;left:22px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#6366f1,#10b981)}
+  .agenda-item{display:flex;gap:16px;padding:14px 0;position:relative;z-index:1}
+  .agenda-dot{width:12px;height:12px;border-radius:50%;background:#6366f1;border:3px solid #fff;box-shadow:0 0 0 2px #6366f1;flex-shrink:0;margin-top:4px;margin-left:16px}
+  .agenda-dot.green{background:#10b981;box-shadow:0 0 0 2px #10b981}
+  .agenda-dot.yellow{background:#f59e0b;box-shadow:0 0 0 2px #f59e0b}
+  .agenda-body{flex:1;padding-left:8px}
+  .agenda-body .t{font-size:11px;font-weight:700;color:#6366f1;letter-spacing:.05em;text-transform:uppercase}
+  .agenda-body h4{font-size:15px;font-weight:700;margin-bottom:2px}
+  .agenda-body p{font-size:13px;color:#64748b}
+
+  /* Formula */
+  .formula{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0}
+  .formula-item{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;text-align:center}
+  .formula-arrow{color:#94a3b8;font-size:20px;font-weight:300}
+
+  /* Highlight box */
+  .highlight{background:linear-gradient(135deg,#ede9fe,#dbeafe);border:1px solid #c4b5fd;border-radius:14px;padding:20px 24px;margin:16px 0}
+  .highlight h4{font-size:15px;font-weight:700;color:#4c1d95;margin-bottom:8px}
+  .highlight p{font-size:14px;color:#3730a3}
+
+  /* Print */
+  @media print{
+    body{background:#fff}
+    .page{padding:20px}
+    .cover{border-radius:10px;padding:40px 32px}
+    .no-print{display:none}
+    section{break-inside:avoid}
+    .objection{break-inside:avoid}
+  }
+
+  /* Print button */
+  .print-btn{position:fixed;bottom:24px;right:24px;background:#6366f1;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(99,102,241,.4);font-family:inherit;display:flex;align-items:center;gap:8px;transition:all .15s}
+  .print-btn:hover{background:#4f46e5;transform:translateY(-1px)}
+  @media print{.print-btn{display:none}}
+
+  /* Two col */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  @media(max-width:600px){.two-col{grid-template-columns:1fr}}
+
+  /* Tag */
+  .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600}
+  .tag-purple{background:#ede9fe;color:#6d28d9}
+  .tag-green{background:#d1fae5;color:#065f46}
+  .tag-red{background:#fee2e2;color:#991b1b}
+
+  hr{border:none;border-top:1px solid #e2e8f0;margin:40px 0}
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Сохранить PDF</button>
+
+<div class="page">
+
+<!-- ОБЛОЖКА -->
+<div class="cover">
+  <div class="cover-tag">DriveMe · Внутренний тренинг</div>
+  <h1>Мастерство рекрутера:<br>от звонка до собеседования</h1>
+  <p>Базовые техники ведения разговора, работы с возражениями и закрытия на встречу</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item">📄 <span>Материал для чтения</span> · 15 мин</div>
+    <div class="cover-meta-item">🎯 <span>Цель</span> · Назначить собеседование</div>
+    <div class="cover-meta-item">👥 <span>Для</span> · Рекрутеров DriveMe</div>
+  </div>
+</div>
+
+<!-- БЛОК 1: MINDSET -->
+<div class="section">
+  <div class="section-label">Блок 1</div>
+  <div class="section-title">Правильный настрой</div>
+  <div class="section-sub">Прежде чем говорить о техниках — про главное</div>
+  <div class="divider"></div>
+
+  <div class="highlight">
+    <h4>Главная установка рекрутера</h4>
+    <p>Ты не продаёшь и не уговариваешь. Ты предлагаешь человеку <strong>возможность</strong> — узнать условия лично и принять взвешенное решение. Твоя задача не «закрыть» водителя любой ценой, а <strong>назначить встречу</strong> тому, кто реально заинтересован.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card card-green">
+      <h3>✅ Правильная позиция</h3>
+      <p>«Я помогаю человеку найти хорошую работу. Я эксперт — он ко мне приходит за информацией»</p>
+    </div>
+    <div class="card card-red">
+      <h3>❌ Неправильная позиция</h3>
+      <p>«Мне нужно выполнить план, я должен уговорить его приехать любым способом»</p>
+    </div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Три вещи которые убивают разговор</h3>
+    <ul style="margin-top:8px;padding-left:18px;color:#475569;font-size:14px;display:flex;flex-direction:column;gap:6px">
+      <li><strong>Монолог.</strong> Рекрутер говорит 80% времени — водитель отключается</li>
+      <li><strong>Давление.</strong> «Вам же нужны деньги?» — человек закрывается</li>
+      <li><strong>Обещания без основания.</strong> «У нас самые высокие заработки!» без цифр — недоверие</li>
+    </ul>
+  </div>
+</div>
+
+<!-- БЛОК 2: СТРУКТУРА ЗВОНКА -->
+<div class="section">
+  <div class="section-label">Блок 2</div>
+  <div class="section-title">Структура звонка</div>
+  <div class="section-sub">5 этапов · от приветствия до подтверждения</div>
+  <div class="divider"></div>
+
+  <div class="formula">
+    <div class="formula-item">Открытие</div>
+    <div class="formula-arrow">→</div>
+    <div class="formula-item">Зацепка</div>
+    <div class="formula-arrow">→</div>
+    <div class="formula-item">Квалификация</div>
+    <div class="formula-arrow">→</div>
+    <div class="formula-item">Возражения</div>
+    <div class="formula-arrow">→</div>
+    <div class="formula-item">Закрытие</div>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="time">0–30 сек</div>
+        <h4>Открытие — кто звонит и зачем</h4>
+        <p>Назовите себя, компанию и причину звонка. Сразу дайте понять что звоните по делу — не спам.</p>
+        <div class="script">
+          <div class="role">Скрипт</div>
+          <div class="text">«Добрий день! Мене звати [Ім'я], я рекрутер компанії DriveMe — це мережа таксопарків. Ви залишали заявку на роботу водієм, я дзвоню щоб домовитися про зустріч. Вам зручно говорити зараз — це буквально 3 хвилини?»</div>
+          <div class="note">💡 Всегда спрашивайте «удобно говорить?» — это уважение к человеку и снижает сопротивление</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="time">30 сек – 1 мин</div>
+        <h4>Зацепка — одно конкретное преимущество</h4>
+        <p>Не перечисляйте всё сразу. Назовите одну сильную вещь которая зацепит именно этого человека.</p>
+        <div class="script">
+          <div class="role">Скрипт</div>
+          <div class="text">«Ми зараз активно набираємо водіїв і готові запропонувати [конкретна цифра] гривень середнього заробітку на місяць — це по нашому місту вище ринку. Плюс авто вже готове, виходити можна вже цього тижня.»</div>
+          <div class="note">💡 Конкретика работает лучше слов «хорошие условия» и «выгодно»</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="time">1–2 мин</div>
+        <h4>Квалификация — 2-3 вопроса</h4>
+        <p>Узнайте главное: есть ли права, был ли опыт, когда готов выйти. Это показывает заботу и помогает сделать предложение точнее.</p>
+        <div class="script">
+          <div class="role">Скрипт</div>
+          <div class="text">«Щоб я міг підібрати для вас найкращий варіант — скажіть, є водійські права категорії B? ... Є досвід роботи в таксі або це перший раз? ... Орієнтовно коли плануєте почати — цього тижня чи наступного?»</div>
+          <div class="note">💡 Задавайте вопросы по одному, не анкетой. После каждого делайте паузу — слушайте ответ</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="time">1–3 мин</div>
+        <h4>Работа с возражениями</h4>
+        <p>Возражения — это не отказ. Это запрос на дополнительную информацию. Подробно разобрано в блоке 3.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="time">30 сек</div>
+        <h4>Закрытие — конкретное время встречи</h4>
+        <p>Не спрашивайте «хотите приехать?». Предлагайте выбор между двумя вариантами времени.</p>
+        <div class="script">
+          <div class="role">Скрипт ✅ Правильно</div>
+          <div class="text">«Тоді давайте запишемо вас. Вам зручніше завтра о 10:00 або в середу о 14:00?»</div>
+          <div class="note">Техника «альтернативного выбора» — человек выбирает не «прийти или нет», а «когда прийти»</div>
+        </div>
+        <div class="script" style="margin-top:8px;background:#1a0a0a;border:1px solid #7f1d1d">
+          <div class="role" style="color:#f87171">Скрипт ❌ Неправильно</div>
+          <div class="text" style="color:#fca5a5">«Ну що, прийдете до нас?» / «Як вам наша пропозиція?» / «Може приїдете подивитися?»</div>
+        </div>
+        <div class="script" style="margin-top:8px">
+          <div class="role">После согласия — подтверждение</div>
+          <div class="text">«Відмінно! Записую вас на [день] о [час]. Адреса: [адреса]. Я надішлю вам повідомлення з усіма деталями. До зустрічі!»</div>
+          <div class="note">💡 Всегда отправляйте сообщение после звонка — снижает процент неявок</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- БЛОК 3: ВОЗРАЖЕНИЯ -->
+<div class="section">
+  <div class="section-label">Блок 3</div>
+  <div class="section-title">Работа с возражениями</div>
+  <div class="section-sub">Топ-6 возражений и как на них отвечать</div>
+  <div class="divider"></div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>Формула ответа на любое возражение</h3>
+    <div class="formula" style="margin-top:12px">
+      <div class="formula-item" style="font-size:12px">Присоединение<br><span style="font-weight:400;font-size:11px">«Розумію»</span></div>
+      <div class="formula-arrow">→</div>
+      <div class="formula-item" style="font-size:12px">Уточнение<br><span style="font-weight:400;font-size:11px">«А що саме...?»</span></div>
+      <div class="formula-arrow">→</div>
+      <div class="formula-item" style="font-size:12px">Аргумент<br><span style="font-weight:400;font-size:11px">Факт / цифра</span></div>
+      <div class="formula-arrow">→</div>
+      <div class="formula-item" style="font-size:12px">Закрытие<br><span style="font-weight:400;font-size:11px">Предложить время</span></div>
+    </div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">💸</div>
+      <h4>«Мало платят / слышал что заработки небольшие»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Розумію, таке питання виникає часто. А що саме ви чули і скільки для вас було б нормальним заробітком? ... [слушаем] ... Наші водії в середньому заробляють [сума] — це реальні цифри по нашому парку. Але на зустрічі я покажу вам конкретний розрахунок під ваш графік. Вам зручніше завтра чи в середу?»</p>
+    </div>
+    <div class="obj-tip">💡 Не защищайтесь — уточните ожидания, потом приведите конкретную цифру</div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">🚗</div>
+      <h4>«Не хочу арендовать — хочу на своей машине»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Розумію. Свое авто — це відповідальність за ремонт, страховку, амортизацію. У нас авто вже готове, всі витрати на технічне обслуговування — наші. Ви просто виходите і заробляєте. На зустрічі порахуємо що вигідніше саме у вашому випадку. Коли вам зручно?»</p>
+    </div>
+    <div class="obj-tip">💡 Предложите посчитать вместе — это снимает абстрактное возражение</div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">⏰</div>
+      <h4>«Нет времени / сейчас занят»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Звичайно, розумію. Зустріч займе всього 20–30 хвилин. Ми можемо записати вас на зручний для вас час — навіть ввечері або в суботу. Коли у вас є вікно цього тижня?»</p>
+    </div>
+    <div class="obj-tip">💡 «Нет времени» часто означает «не понимаю зачем». Напомните что встреча короткая и удобная</div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">🔄</div>
+      <h4>«Уже работаю в другом парке»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Добре що ви вже в темі! Скажіть, а що вас не влаштовує там де ви зараз? ... [слушаем] ... Саме тому і варто приїхати — порівняєте умови і самі вирішите. Нічого не зобов'язує. Коли зручно?»</p>
+    </div>
+    <div class="obj-tip">💡 Работающий водитель — теплый лид. Узнайте его боль в текущем парке</div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">🤔</div>
+      <h4>«Подумаю / перезвоню сам»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Звичайно, це важливе рішення. Щоб думати було над чим — давайте просто запишемо вас попередньо, а якщо передумаєте — просто попередьте мене. Вам зручно в четвер або п'ятницю?»</p>
+    </div>
+    <div class="obj-tip">💡 «Подумаю» = вежливый отказ. Записывайте и говорите что можно отменить</div>
+  </div>
+
+  <div class="objection">
+    <div class="obj-header">
+      <div class="icon">😟</div>
+      <h4>«Слышал плохие отзывы о компании»</h4>
+    </div>
+    <div class="obj-body">
+      <div class="label">Ответ</div>
+      <p>«Розумію, репутація важлива. А де саме читали і що саме писали? ... [слушаем] ... Погані відгуки бувають у будь-якої компанії — важливо розуміти контекст. Я пропоную приїхати і самому побачити як у нас все влаштовано, поговорити з реальними водіями. Коли вам зручно?»</p>
+    </div>
+    <div class="obj-tip">💡 Не спорьте с отзывами — предложите увидеть всё своими глазами</div>
+  </div>
+
+</div>
+
+<!-- БЛОК 4: ЧЕГО НЕ ДЕЛАТЬ -->
+<div class="section">
+  <div class="section-label">Блок 4</div>
+  <div class="section-title">Стоп-список рекрутера</div>
+  <div class="section-sub">Вещи которые мгновенно убивают доверие</div>
+  <div class="divider"></div>
+
+  <ul class="checklist">
+    <li class="no">Говорить «у нас лучше всех» без конкретных цифр</li>
+    <li class="no">Перебивать кандидата когда он говорит</li>
+    <li class="no">Давить и торопить: «ну так приедете или нет?»</li>
+    <li class="no">Обещать то, в чём не уверены</li>
+    <li class="no">Не отправлять сообщение после договорённости о встрече</li>
+    <li class="no">Не напоминать за день до собеседования</li>
+    <li class="no">Спорить с возражением вместо того чтобы уточнить его</li>
+    <li>Всегда уточнять «удобно говорить?» в начале</li>
+    <li>Завершать звонок конкретным временем встречи</li>
+    <li>Отправлять адрес и время сразу после договорённости</li>
+    <li>Звонить за 1 день до встречи для подтверждения</li>
+  </ul>
+</div>
+
+<hr/>
+
+<!-- СТРУКТУРА СОЗВОНА -->
+<div class="section">
+  <div class="section-label">Приложение</div>
+  <div class="section-title">Структура тренинг-созвона</div>
+  <div class="section-sub">1 час · онлайн или офлайн</div>
+  <div class="divider"></div>
+
+  <div class="card card-accent" style="margin-bottom:24px">
+    <h3>Цель созвона</h3>
+    <p style="margin-top:6px">Не пересказать материал — он уже прочитан. Отработать навык в безопасных условиях через ролевые игры и разбор реальных ситуаций из практики.</p>
+  </div>
+
+  <div class="agenda">
+
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:00 — 00:05 · 5 мин</div>
+        <h4>Открытие и контекст</h4>
+        <p>Зачем этот тренинг. Что изменится после него. Правила: говорить честно, никакой критики — только обратная связь.</p>
+      </div>
+    </div>
+
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:05 — 00:15 · 10 мин</div>
+        <h4>Разбор материала — вопросы и уточнения</h4>
+        <p>Ведущий спрашивает: «Что было новым? Что вызвало сомнения? С чем не согласны?» Обсуждение главных тезисов. Не лекция — диалог.</p>
+      </div>
+    </div>
+
+    <div class="agenda-item">
+      <div class="agenda-dot green"></div>
+      <div class="agenda-body">
+        <div class="t" style="color:#10b981">00:15 — 00:25 · 10 мин</div>
+        <h4>Демо-звонок от ведущего</h4>
+        <p>Ведущий разыгрывает полный звонок сам — от открытия до закрытия. Один из участников играет водителя с возражением. Остальные наблюдают и записывают что заметили.</p>
+      </div>
+    </div>
+
+    <div class="agenda-item">
+      <div class="agenda-dot green"></div>
+      <div class="agenda-body">
+        <div class="t" style="color:#10b981">00:25 — 00:45 · 20 мин</div>
+        <h4>Ролевые игры в парах</h4>
+        <p>Каждый рекрутер проводит один звонок — партнёр играет кандидата с заранее выданным возражением. Затем меняются. Ведущий наблюдает и делает пометки.</p>
+        <div class="card" style="margin-top:10px;padding:12px 16px">
+          <h3 style="font-size:13px">Карточки возражений для «кандидата»</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <span class="tag tag-red">Мало платят</span>
+            <span class="tag tag-red">Уже работаю</span>
+            <span class="tag tag-red">Подумаю</span>
+            <span class="tag tag-red">Нет времени</span>
+            <span class="tag tag-red">Плохие отзывы</span>
+            <span class="tag tag-red">Хочу на своей машине</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="agenda-item">
+      <div class="agenda-dot yellow"></div>
+      <div class="agenda-body">
+        <div class="t" style="color:#f59e0b">00:45 — 00:55 · 10 мин</div>
+        <h4>Разбор и обратная связь</h4>
+        <p>Ведущий разбирает каждую пару: что получилось хорошо, одна конкретная точка роста. Сами рекрутеры отвечают: «Что было сложнее всего?»</p>
+      </div>
+    </div>
+
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:55 — 01:00 · 5 мин</div>
+        <h4>Договорённости и следующий шаг</h4>
+        <p>Каждый называет одну вещь которую внедрит в следующем звонке. Договориться о контрольной точке через 2 недели.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="highlight" style="margin-top:24px">
+    <h4>Совет ведущему</h4>
+    <p>Самая распространённая ошибка тренинга — говорить про теорию вместо практики. Если ролевые игры начнутся позже 20-й минуты — тренинг теряет 80% эффекта. Теория усваивается только через действие.</p>
+  </div>
+
+</div>
+
+<div style="text-align:center;padding:32px 0 16px;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0">
+  DriveMe · Внутренний тренинг для рекрутеров · Конфиденциально
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
