@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DriveMe — Гайд ведучого тренінгу</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#0f172a;font-size:15px;line-height:1.6}
+  .page{max-width:800px;margin:0 auto;padding:40px 24px;background:#fff}
+
+  .cover{background:linear-gradient(135deg,#0f172a 0%,#1a3a2a 60%,#064e3b 100%);color:#fff;border-radius:20px;padding:60px 48px;margin-bottom:48px;position:relative;overflow:hidden}
+  .cover::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:rgba(16,185,129,.15)}
+  .cover::after{content:'';position:absolute;left:-40px;bottom:-40px;width:200px;height:200px;border-radius:50%;background:rgba(99,102,241,.1)}
+  .cover-tag{background:rgba(16,185,129,.3);border:1px solid rgba(16,185,129,.5);color:#6ee7b7;padding:6px 16px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:inline-block;margin-bottom:20px}
+  .cover h1{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+  .cover p{font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;max-width:480px}
+  .cover-meta{display:flex;gap:24px;flex-wrap:wrap}
+  .cover-meta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.6)}
+  .cover-meta-item span{font-weight:600;color:#fff}
+
+  .section{margin-bottom:48px}
+  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#10b981;margin-bottom:8px}
+  .section-title{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+  .section-sub{font-size:14px;color:#64748b;margin-bottom:24px}
+  .divider{height:3px;background:linear-gradient(90deg,#10b981,#6366f1,transparent);border-radius:2px;margin-bottom:28px}
+
+  .card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px 24px;margin-bottom:14px}
+  .card-accent{border-left:4px solid #10b981}
+  .card-purple{border-left:4px solid #6366f1;background:#faf5ff;border-color:#e9d5ff}
+  .card-yellow{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b}
+  .card-red{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+  .card p{font-size:14px;color:#475569;line-height:1.6}
+
+  .highlight{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:14px;padding:20px 24px;margin:16px 0}
+  .highlight h4{font-size:15px;font-weight:700;color:#064e3b;margin-bottom:8px}
+  .highlight p{font-size:14px;color:#065f46}
+
+  .highlight-purple{background:linear-gradient(135deg,#ede9fe,#dbeafe);border:1px solid #c4b5fd;border-radius:14px;padding:20px 24px;margin:16px 0}
+  .highlight-purple h4{font-size:15px;font-weight:700;color:#4c1d95;margin-bottom:8px}
+  .highlight-purple p{font-size:14px;color:#3730a3}
+
+  .agenda{display:flex;flex-direction:column;gap:0;position:relative}
+  .agenda::before{content:'';position:absolute;left:22px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#10b981,#6366f1)}
+  .agenda-item{display:flex;gap:16px;padding:20px 0;position:relative;z-index:1;border-bottom:1px solid #f1f5f9}
+  .agenda-item:last-child{border-bottom:none}
+  .agenda-dot{width:12px;height:12px;border-radius:50%;background:#10b981;border:3px solid #fff;box-shadow:0 0 0 2px #10b981;flex-shrink:0;margin-top:4px;margin-left:16px}
+  .agenda-dot.purple{background:#6366f1;box-shadow:0 0 0 2px #6366f1}
+  .agenda-dot.yellow{background:#f59e0b;box-shadow:0 0 0 2px #f59e0b}
+  .agenda-dot.red{background:#ef4444;box-shadow:0 0 0 2px #ef4444}
+  .agenda-body{flex:1;padding-left:8px}
+  .agenda-body .t{font-size:11px;font-weight:700;color:#10b981;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+  .agenda-body .t.purple{color:#6366f1}
+  .agenda-body .t.yellow{color:#f59e0b}
+  .agenda-body h4{font-size:16px;font-weight:700;margin-bottom:6px}
+  .agenda-body p{font-size:13px;color:#64748b;line-height:1.6}
+  .agenda-body .goal{font-size:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;margin-top:8px;color:#166534}
+  .agenda-body .goal strong{color:#064e3b}
+
+  .script{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px 20px;margin:10px 0;font-size:13px;line-height:1.7}
+  .script .role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#10b981;margin-bottom:4px}
+  .script .text{color:#f1f5f9}
+
+  .tag{display:inline-block;padding:3px 12px;border-radius:99px;font-size:12px;font-weight:600}
+  .tag-purple{background:#ede9fe;color:#6d28d9}
+  .tag-red{background:#fee2e2;color:#991b1b}
+  .tag-green{background:#d1fae5;color:#065f46}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  @media(max-width:600px){.two-col{grid-template-columns:1fr}}
+
+  .checklist{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .checklist li{display:flex;align-items:flex-start;gap:10px;font-size:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0}
+  .checklist li::before{content:'→';color:#10b981;font-weight:800;font-size:14px;flex-shrink:0;margin-top:1px}
+
+  .timer-badge{display:inline-flex;align-items:center;gap:6px;background:#0f172a;color:#10b981;font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;margin-bottom:10px}
+
+  @media print{
+    body{background:#fff}
+    .page{padding:20px}
+    .cover{border-radius:10px;padding:40px 32px}
+    .no-print{display:none}
+    .agenda-item{break-inside:avoid}
+  }
+
+  .print-btn{position:fixed;bottom:24px;right:24px;background:#10b981;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(16,185,129,.4);font-family:inherit;display:flex;align-items:center;gap:8px;transition:all .15s}
+  .print-btn:hover{background:#059669;transform:translateY(-1px)}
+  @media print{.print-btn{display:none}}
+
+  hr{border:none;border-top:1px solid #e2e8f0;margin:40px 0}
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Зберегти PDF</button>
+
+<div class="page">
+
+<!-- ОБКЛАДИНКА -->
+<div class="cover">
+  <div class="cover-tag">DriveMe · Для ведучого тренінгу</div>
+  <h1>Гайд тренінгу рекрутерів:<br>структура годинного дзвінка</h1>
+  <p>Покроковий сценарій для CEO або керівника — як провести тренінг щоб рекрутери реально змінили поведінку</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item">⏱️ <span>Тривалість</span> · 1 година</div>
+    <div class="cover-meta-item">👤 <span>Для</span> · Ведучого (CEO / керівник)</div>
+    <div class="cover-meta-item">✅ <span>Передумова</span> · Рекрутери прочитали матеріал</div>
+  </div>
+</div>
+
+<!-- ПРИНЦИП -->
+<div class="section">
+  <div class="section-label">Головний принцип</div>
+  <div class="section-title">Чому цей тренінг працює</div>
+  <div class="section-sub">Прочитати ≠ вміти. Вміти = відпрацювати</div>
+  <div class="divider"></div>
+
+  <div class="highlight-purple">
+    <h4>Мета тренінгу</h4>
+    <p>Не переказати матеріал — він вже прочитаний. Завдання ведучого — створити безпечне середовище де кожен рекрутер <strong>фізично промовить</strong> скрипт вголос, отримає помилку і виправить її. Тільки так навичка закріплюється.</p>
+  </div>
+
+  <div class="two-col" style="margin-top:16px">
+    <div class="card card-accent">
+      <h3>✅ Правильний формат</h3>
+      <p>80% часу — рольові ігри і практика. 20% — обговорення і питання.</p>
+    </div>
+    <div class="card card-red">
+      <h3>❌ Помилка ведучого</h3>
+      <p>Переказувати теорію з матеріалу замість того щоб одразу переходити до практики.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ПІДГОТОВКА -->
+<div class="section">
+  <div class="section-label">До тренінгу</div>
+  <div class="section-title">Підготовка ведучого</div>
+  <div class="section-sub">Що зробити перед початком</div>
+  <div class="divider"></div>
+
+  <ul class="checklist">
+    <li>Переконатися що всі рекрутери прочитали матеріал — запитати підтвердження заздалегідь</li>
+    <li>Підготувати картки заперечень (можна просто написати на папірцях): «Подумаю», «Мало платять», «Вже працюю», «Немає часу», «Погані відгуки», «Хочу на своїй машині»</li>
+    <li>Самому відрепетирувати демо-дзвінок — ведучий показує перший, тому має бути впевненим</li>
+    <li>Визначити пари для рольових ігор заздалегідь щоб не витрачати час</li>
+    <li>Нагадати правило: зворотній зв'язок — тільки конструктивний, без «ти погано сказав»</li>
+  </ul>
+</div>
+
+<!-- ХРОНОМЕТРАЖ -->
+<div class="section">
+  <div class="section-label">Сценарій</div>
+  <div class="section-title">Покроковий хронометраж</div>
+  <div class="section-sub">1 година · суворо дотримуйтесь таймінгу</div>
+  <div class="divider"></div>
+
+  <div class="agenda">
+
+    <!-- 00:00 -->
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:00 — 00:05 · 5 хвилин</div>
+        <h4>Відкриття — контекст і правила</h4>
+        <p>Поясніть навіщо цей тренінг і що зміниться після нього. Встановіть правила.</p>
+        <div class="script">
+          <div class="role">Що сказати</div>
+          <div class="text">«Ви прочитали матеріал — добре. Сьогодні ми не будемо його переказувати. Ми будемо тренуватися — кожен зробить мінімум один дзвінок вголос. Правило одне: зворотній зв'язок — тільки конкретний і без оцінок. Не "погано сказав", а "спробуй ось так". Поїхали.»</div>
+        </div>
+        <div class="goal"><strong>Результат:</strong> всі розуміють формат, немає страху «оцінювання»</div>
+      </div>
+    </div>
+
+    <!-- 00:05 -->
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:05 — 00:15 · 10 хвилин</div>
+        <h4>Питання та уточнення по матеріалу</h4>
+        <p>Не лекція — діалог. Ведучий запитує, рекрутери відповідають.</p>
+        <div class="script">
+          <div class="role">Питання ведучого</div>
+          <div class="text">«Що з матеріалу було для вас новим або несподіваним?»<br><br>«З чим ви не погоджуєтесь або маєте сумніви?»<br><br>«Яке заперечення у вашій практиці зустрічається найчастіше?»</div>
+        </div>
+        <div class="goal"><strong>Результат:</strong> виявлені зони опору або нерозуміння — їх опрацюєте в рольових іграх</div>
+      </div>
+    </div>
+
+    <!-- 00:15 -->
+    <div class="agenda-item">
+      <div class="agenda-dot purple"></div>
+      <div class="agenda-body">
+        <div class="t purple">00:15 — 00:25 · 10 хвилин</div>
+        <h4>Демо-дзвінок від ведучого</h4>
+        <p>Ведучий сам розігрує повний дзвінок від відкриття до закриття. Один рекрутер грає кандидата з карткою «Подумаю». Решта спостерігають і фіксують що зауважили.</p>
+        <div class="card card-purple" style="margin-top:12px">
+          <h3>Сценарій для «кандидата»</h3>
+          <p style="margin-top:6px">Спочатку погоджується слухати → після зачіпки каже «Подумаю, передзвоню» → якщо ведучий відпрацьовує варіант Б (записати попередньо) — погоджується на час</p>
+        </div>
+        <div class="script">
+          <div class="role">Після демо — запитати у групи</div>
+          <div class="text">«Що ви помітили? Що спрацювало добре? Що б ви зробили інакше?»</div>
+        </div>
+        <div class="goal"><strong>Результат:</strong> рекрутери бачать живий зразок і вже думають як самі зроблять</div>
+      </div>
+    </div>
+
+    <!-- 00:25 -->
+    <div class="agenda-item">
+      <div class="agenda-dot purple"></div>
+      <div class="agenda-body">
+        <div class="t purple">00:25 — 00:45 · 20 хвилин</div>
+        <h4>Рольові ігри в парах</h4>
+        <p>Кожна пара отримує картку заперечення. Рекрутер А дзвонить, рекрутер Б грає кандидата. Потім міняються. Ведучий ходить між парами і спостерігає.</p>
+
+        <div class="card" style="margin-top:12px;padding:14px 16px">
+          <h3 style="font-size:13px;margin-bottom:10px">Роздайте картки заперечень</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span class="tag tag-purple">★ Подумаю</span>
+            <span class="tag tag-red">Мало платять</span>
+            <span class="tag tag-red">Вже працюю</span>
+            <span class="tag tag-red">Немає часу</span>
+            <span class="tag tag-red">Погані відгуки</span>
+            <span class="tag tag-red">Хочу на своїй машині</span>
+          </div>
+          <p style="font-size:11px;color:#94a3b8;margin-top:10px">★ Починайте кожну пару з «Подумаю» — це головне заперечення в практиці DriveMe</p>
+        </div>
+
+        <div class="card card-yellow" style="margin-top:12px">
+          <h3>На що звертати увагу ведучому</h3>
+          <ul style="margin-top:8px;padding-left:18px;font-size:13px;color:#475569;display:flex;flex-direction:column;gap:6px">
+            <li>Чи питає рекрутер «зручно говорити?» на початку</li>
+            <li>Чи є конкретна цифра в зачіпці (1 300–2 000 грн/день)</li>
+            <li>Чи не тисне і не квапить після заперечення</li>
+            <li>Чи завершує альтернативним вибором часу</li>
+          </ul>
+        </div>
+        <div class="goal"><strong>Результат:</strong> кожен рекрутер хоча б раз промовив повний скрипт вголос</div>
+      </div>
+    </div>
+
+    <!-- 00:45 -->
+    <div class="agenda-item">
+      <div class="agenda-dot yellow"></div>
+      <div class="agenda-body">
+        <div class="t yellow">00:45 — 00:55 · 10 хвилин</div>
+        <h4>Розбір і зворотній зв'язок</h4>
+        <p>Ведучий коментує кожну пару: одна сильна сторона + одна конкретна точка зростання. Потім питає групу.</p>
+        <div class="script">
+          <div class="role">Формула зворотнього зв'язку</div>
+          <div class="text">«[Ім'я], у тебе добре вийшло [конкретне] — наприклад, ти одразу назвав цифру. Наступного разу спробуй [конкретне] — наприклад, після заперечення не пояснюй, а відразу пропонуй час.»</div>
+        </div>
+        <div class="script">
+          <div class="role">Питання до групи</div>
+          <div class="text">«Що було найскладнішим у рольовій грі? Де відчули що "підвисаєте"?»</div>
+        </div>
+        <div class="goal"><strong>Результат:</strong> кожен має одну конкретну річ яку буде покращувати</div>
+      </div>
+    </div>
+
+    <!-- 00:55 -->
+    <div class="agenda-item">
+      <div class="agenda-dot"></div>
+      <div class="agenda-body">
+        <div class="t">00:55 — 01:00 · 5 хвилин</div>
+        <h4>Закриття — особисте зобов'язання</h4>
+        <p>Кожен рекрутер називає одну конкретну зміну яку зробить у наступному дзвінку. Ведучий фіксує і нагадає через 2 тижні.</p>
+        <div class="script">
+          <div class="role">Що сказати</div>
+          <div class="text">«Кожен по колу — одне речення: що конкретно зробиш інакше у наступному дзвінку? Не "буду кращим", а конкретно — наприклад "буду питати зручно говорити" або "буду пропонувати два варіанти часу".»</div>
+        </div>
+        <div class="goal"><strong>Результат:</strong> є конкретні зобов'язання + контрольна точка через 2 тижні</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ПІСЛЯ ТРЕНІНГУ -->
+<div class="section">
+  <div class="section-label">Після тренінгу</div>
+  <div class="section-title">Контрольна точка через 2 тижні</div>
+  <div class="section-sub">Як закріпити результат</div>
+  <div class="divider"></div>
+
+  <div class="highlight">
+    <h4>Що зробити через 2 тижні</h4>
+    <p>Провести 15-хвилинний дзвінок. Кожен рекрутер звітує: чи застосував те що назвав? Що спрацювало, що ні? Якщо є — розібрати 1–2 реальних дзвінки разом.</p>
+  </div>
+
+  <div class="two-col" style="margin-top:16px">
+    <div class="card card-accent">
+      <h3>Показники успіху</h3>
+      <ul style="margin-top:8px;padding-left:18px;font-size:13px;color:#475569;display:flex;flex-direction:column;gap:6px">
+        <li>Зросла конверсія дзвінок → зустріч</li>
+        <li>Менше «перезвоню сам» без запису</li>
+        <li>Рекрутери самі помічають свої помилки</li>
+      </ul>
+    </div>
+    <div class="card card-yellow">
+      <h3>Якщо немає змін</h3>
+      <p>Повторити рольові ігри з реальними дзвінками — послухати записи разом і розібрати конкретні моменти.</p>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:32px 0 16px;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0">
+  DriveMe · Гайд для ведучого тренінгу · Конфіденційно
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
